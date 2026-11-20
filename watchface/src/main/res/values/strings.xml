@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_face_name">DataDial</string>
+
+    <!-- Settings -->
+    <string name="clock_style">Clock style</string>
+    <string name="clock_analog">Analog</string>
+    <string name="clock_digital">Digital</string>
+    <string name="accent_color">Lines and icons color</string>
+    <string name="heart_color">Heart rate icon color</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_green">Green</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_red">Red</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_white">White</string>
+    <string name="color_gray">Gray</string>
+
+    <!-- Complication slots, named by their place on the dial -->
+    <string name="slot_bottom">6 o\'clock stat</string>
+    <string name="slot_lower_left">7:30 stat</string>
+    <string name="slot_left">9 o\'clock stat</string>
+</resources>
