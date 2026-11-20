@@ -1,5 +1,15 @@
 [versions]
 androidGradlePlugin = "9.5.1"
+wearWatchface = "1.3.0"
+healthServices = "1.1.0"
+concurrentFutures = "1.2.0"
+protolayout = "1.4.2"
+
+[libraries]
+wear-complications-data-source-ktx = { module = "androidx.wear.watchface:watchface-complications-data-source-ktx", version.ref = "wearWatchface" }
+health-services-client = { module = "androidx.health:health-services-client", version.ref = "healthServices" }
+protolayout-expression = { module = "androidx.wear.protolayout:protolayout-expression", version.ref = "protolayout" }
+concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "concurrentFutures" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

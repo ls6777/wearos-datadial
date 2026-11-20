@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DataDial Stats</string>
+
+    <!-- Data source names, shown in the watch face editor -->
+    <string name="calories">Calories</string>
+    <string name="floors">Floors</string>
+    <string name="elevation">Elevation</string>
+
+    <!-- Screen reader descriptions -->
+    <string name="calories_value">%1$s calories</string>
+    <string name="floors_value">%1$s floors, goal %2$d</string>
+    <string name="elevation_value">Elevation %1$s</string>
+
+    <!-- App screen -->
+    <string name="allow">Allow access</string>
+    <string name="status">Health data: %1$s\nCalories: %2$s\nFloors: %3$s\nElevation: %4$s\n%5$s</string>
+    <string name="calibrating">Calibrating elevation…</string>
+    <string name="calibrated_now">Elevation calibrated just now</string>
+    <string name="calibrated_at">Elevation calibrated %1$s</string>
+    <string name="not_calibrated">Elevation not calibrated yet (needs a location fix)</string>
+    <string name="not_calibrated_no_location">Elevation not calibrated: allow location to calibrate it</string>
+    <string name="no_barometer">This watch has no barometer</string>
+</resources>

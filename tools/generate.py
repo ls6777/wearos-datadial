@@ -8,6 +8,7 @@ changing anything below, then build with Gradle (build.sh does both).
 Writes:
   watchface/src/main/res/raw/watchface.xml   the watch face
   watchface/src/main/res/drawable/*.png      icons, hands and symbols
+  stats/src/main/res/drawable/*.xml          DataDial Stats' icons
 
 With --test, the stats use fixed values (TEST_VALUES) instead of the
 watch's data, to check the layout on the emulator. build.sh test does this
@@ -38,14 +39,14 @@ C = SIZE / 2
 R = SIZE / 2
 
 #: Stats around the dial, clockwise from 12 o'clock (45 degrees apart).
-SLOT_DATE, SLOT_HEART, SLOT_BATTERY, SLOT_STEPS = 0, 1, 2, 3
-SLOT_BOTTOM, SLOT_LOWER_LEFT, SLOT_LEFT, SLOT_TEMPERATURE = 4, 5, 6, 7
+SLOT_DATE, SLOT_HEART, SLOT_UV, SLOT_STEPS = 0, 1, 2, 3
+SLOT_BOTTOM, SLOT_LOWER_LEFT, SLOT_LEFT, SLOT_WEATHER = 4, 5, 6, 7
 SLOT_COUNT = 8
 
 #: Value text size per slot, as a fraction of the radius (as in DataDial).
-#: The battery cell has one line here (Wear OS has no battery estimate), so
-#: it uses the calories size instead of the two-line base size.
-VALUE_SIZES = [0.165, 0.25, 0.21, 0.165, 0.21, 0.25, 0.165, 0.25]
+#: The UV index (DataDial's battery cell) is one or two digits, so it uses
+#: the large size of the other short values.
+VALUE_SIZES = [0.165, 0.25, 0.25, 0.165, 0.21, 0.25, 0.165, 0.25]
 LABEL_SIZE = 0.12  # weekday and complication titles
 VALUE_RADIUS = 0.68  # value text center
 ICON_RADIUS = 0.38  # icon center
@@ -70,10 +71,28 @@ SECONDS_SIZE = 0.19
 SECONDS_Y = 0.18
 
 BATTERY_LOW = 20  # percent
-#: Temperature thresholds, in each unit. The weather temperature is a whole
-#: number, so "below 4.44 C" is "below 5" and "above 32.22 C" is "above 32".
+#: The battery in the middle of the face (percentage above the icon):
+#: percentage text size (DataDial's terms, see FONT_SCALE), icon size as a
+#: fraction of ICON_SIZE, space between the text and the icon, and the
+#: height of the pair's middle as a fraction of the radius from the center:
+#: above the hub in analog mode, above the time in digital mode.
+CENTER_BATTERY_SIZE = 0.13
+CENTER_BATTERY_ICON = 0.8
+CENTER_BATTERY_GAP = 4
+ANALOG_BATTERY_Y = -0.15
+DIGITAL_BATTERY_Y = -0.29
+#: Temperature thresholds, in each unit (DataDial's 40 F and 90 F). The
+#: weather temperature is a whole number, so "below 4.44 C" is "below 5" and
+#: "above 32.22 C" is "above 32".
 COLD_BELOW_F, HOT_ABOVE_F = 40, 90
 COLD_BELOW_C, HOT_ABOVE_C = 5, 32
+#: Weather icons are drawn this much larger than the other icons (they are
+#: more detailed).
+WEATHER_ICON_SCALE = 1.1
+#: The weather column in the 10:30 cell (icon, temperature, high/low), as
+#: fractions of the radius from the center: its x, and the y of each line.
+WEATHER_COLUMN_X = -0.44
+WEATHER_COLUMN_Y = (-0.64, -0.46, -0.33)
 
 #: Alpha of the dial and the time in always-on mode. White at this alpha is
 #: about DataDial's sleep gray (0x9A9A9A).
@@ -89,6 +108,10 @@ GOAL = "#3DDC57"
 COLD = "#4FC3F7"
 GAUGE_TRACK = "#333333"
 GAUGE_YELLOW = "#FFD60A"
+#: UV index colors from the WHO scale, highest first: (expression name,
+#: lowest index, color). Lower values (low and moderate) are white.
+UV_LEVELS = [("uvExtreme", 11, "#AF52DE"), ("uvVeryHigh", 8, "#FF3B30"),
+             ("uvHigh", 6, "#FF9500")]
 STEEL = "#D4D8DD"
 SLEEP = "#9A9A9A"
 
@@ -111,15 +134,28 @@ DEFAULT_HEART = 5  # red
 ACCENT = "[CONFIGURATION.accent.0]"
 HEART = "[CONFIGURATION.heart.0]"
 
-#: Complication slots for the stats Wear OS doesn't give watch faces directly
-#: (DataDial's calories, floors and elevation): slot, id, display name string,
-#: default system data source. The defaults are system sources that always
-#: have data: a source with nothing to show (such as NEXT_EVENT with no
-#: calendar) sends NO_DATA, which Watch Face Format draws as nothing at all.
+#: The companion app (stats/) with the data sources for the stats Watch Face
+#: Format can't read: calories, floors, elevation and battery time left.
+STATS_PACKAGE = "io.github.ls6777.datadial.stats"
+STATS_RES = ROOT / "stats" / "src" / "main" / "res"
+
+
+def stats_source(name):
+    """Component name of one of DataDial Stats' data sources."""
+    return f"{STATS_PACKAGE}/{STATS_PACKAGE}.{name}"
+
+
+#: Complication slots for DataDial's calories, floors and elevation: slot,
+#: id, display name string, default data source and type from DataDial Stats,
+#: and the system data source used when DataDial Stats isn't installed. Those
+#: are sources that always have data: a source with nothing to show (such as
+#: NEXT_EVENT with no calendar) sends NO_DATA, which Watch Face Format draws
+#: as nothing at all.
 COMPLICATIONS = [
-    (SLOT_BOTTOM, 1, "slot_bottom", "SUNRISE_SUNSET"),
-    (SLOT_LOWER_LEFT, 2, "slot_lower_left", "UNREAD_NOTIFICATION_COUNT"),
-    (SLOT_LEFT, 3, "slot_left", "WORLD_CLOCK"),
+    (SLOT_BOTTOM, 1, "slot_bottom", "CaloriesSource", "SHORT_TEXT", "SUNRISE_SUNSET"),
+    (SLOT_LOWER_LEFT, 2, "slot_lower_left", "FloorsSource", "GOAL_PROGRESS",
+     "UNREAD_NOTIFICATION_COUNT"),
+    (SLOT_LEFT, 3, "slot_left", "ElevationSource", "SHORT_TEXT", "WORLD_CLOCK"),
 ]
 
 FONT = {"family": "SYNC_TO_DEVICE", "weight": "BOLD", "width": "CONDENSED"}
@@ -193,7 +229,7 @@ def box(cx, cy, w, h):
 
 
 def text(parent, cx, cy, width, size, template, params, color=WHITE,
-         upper=False, auto_size=False, name=None, offset=(0, 0)):
+         upper=False, auto_size=False, name=None, offset=(0, 0), align="CENTER"):
     """Centered single-line text. offset is subtracted from the position, for
     elements inside a complication slot. size is in DataDial's terms (see
     FONT_SCALE)."""
@@ -202,7 +238,7 @@ def text(parent, cx, cy, width, size, template, params, color=WHITE,
     part = el(parent, "PartText", **b)
     if name:
         part.set("name", name)
-    t = el(part, "Text", align="CENTER", ellipsis="TRUE")
+    t = el(part, "Text", align=align, ellipsis="TRUE")
     if auto_size:
         t.set("isAutoSize", "TRUE")
     font = el(t, "Font", size=float(round(size, 1)), color=color, **FONT)
@@ -293,8 +329,10 @@ def gauge(parent, slot, progress, met, color_cases, offset=(0, 0)):
     ox, oy = offset
 
     def arc(draw, a, b):
+        # The PartDraw is moved by the offset, so the arc is centered on
+        # the dial in the PartDraw's own coordinates.
         lo, hi = min(a, b), max(a, b)
-        return el(draw, "Arc", centerX=C - ox, centerY=C - oy, width=diameter,
+        return el(draw, "Arc", centerX=C, centerY=C, width=diameter,
                   height=diameter, startAngle=lo, endAngle=hi)
 
     track_case, = condition(parent, [(f"track{slot}", f"!({met})")], default=False)
@@ -342,20 +380,29 @@ def heart_slot(parent):
     text(none, x, y, 0.6 * R, size, "--", [])
 
 
-def battery_slot(parent):
-    """Battery outline filled to the charge level, red below BATTERY_LOW,
-    with a green bolt while charging; the percentage beside it."""
-    cx, cy = icon_position(SLOT_BATTERY)
-    size = ICON_SIZE
+def battery(parent, y, name):
+    """The battery in the middle of the face: the percentage above a small
+    outline filled to the charge level, the pair centered on the dial with
+    its middle at height y. Red below BATTERY_LOW, with a green bolt over
+    the outline while charging. Hidden in always-on mode."""
+    group = el(parent, "Group", name=name, x=0, y=0, width=SIZE, height=SIZE)
+    ambient_hide(group)
+    size = round(ICON_SIZE * CENTER_BATTERY_ICON)
     pen = max(size // 14, 2)
     body_w, body_h, tip_w = round(size * 0.80), round(size * 0.48), round(size * 0.08)
-    left = round(cx - (body_w + tip_w) / 2)
-    top = round(cy - body_h / 2)
+    text_size = CENTER_BATTERY_SIZE * R
+    text_w = math.ceil(text_size * FONT_SCALE * 3.0)  # room for "100%"
+    # Distance between the centers of the text and the icon.
+    step = text_size * FONT_SCALE * 0.6 + body_h / 2 + CENTER_BATTERY_GAP
+    text_y = y - step / 2
+    icon_y = y + step / 2
+    left = round(C - (body_w + tip_w) / 2)
+    top = round(icon_y - body_h / 2)
     inset = pen + 2
     fill_w = body_w - 2 * inset
 
     low = f"{BATTERY_LOW} > [BATTERY_PERCENT]"
-    low_case, normal = condition(parent, [("batteryLow", low)])
+    low_case, normal = condition(group, [(name + "Low", low)])
     for case, color in ((low_case, RED), (normal, ACCENT)):
         draw = el(case, "PartDraw", x=left, y=top, width=body_w + tip_w, height=body_h)
         outline = el(draw, "RoundRectangle", x=pen / 2, y=pen / 2,
@@ -370,25 +417,41 @@ def battery_slot(parent):
         el(level, "Fill", color=color)
         el(level, "Transform", target="width",
            value=f"clamp({fill_w} * [BATTERY_PERCENT] / 100, 0.1, {fill_w})")
-        x, y = value_position(SLOT_BATTERY)
-        text(case, x, y, 0.6 * R, VALUE_SIZES[SLOT_BATTERY] * R, "%d%%",
-             ["[BATTERY_PERCENT]"], color=RED if case is low_case else WHITE)
+        text(case, C, text_y, text_w, text_size, "%d%%", ["[BATTERY_PERCENT]"],
+             color=RED if case is low_case else WHITE)
 
-    charging, = condition(parent, [("charging", "[BATTERY_CHARGING_STATUS]")],
+    charging, = condition(group, [(name + "Charging", "[BATTERY_CHARGING_STATUS]")],
                           default=False)
-    image(charging, cx, cy, size * 1.15, "ic_bolt", name="bolt")
+    image(charging, C, icon_y, size * 1.15, "ic_bolt")
+
+
+def uv_slot(parent):
+    """The weather's current UV index, colored by the WHO risk scale from
+    high up; "--" without weather data."""
+    x, y = icon_position(SLOT_UV)
+    image(parent, x, y, ICON_SIZE, "ic_uv", tint=ACCENT, name="uvIcon")
+    x, y = value_position(SLOT_UV)
+    size = VALUE_SIZES[SLOT_UV] * R
+    uv = "[WEATHER.UV_INDEX]"
+    cases = [("uvNone", "![WEATHER.IS_AVAILABLE]")]
+    cases += [(name, f"{uv} >= {level}") for name, level, _ in UV_LEVELS]
+    none, *levels, normal = condition(parent, cases)
+    text(none, x, y, 0.6 * R, size, "--", [])
+    for case, (_, _, color) in zip(levels, UV_LEVELS):
+        text(case, x, y, 0.6 * R, size, "%d", [uv], color=color)
+    text(normal, x, y, 0.6 * R, size, "%d", [uv])
 
 
 def steps_slot(parent):
     x, y = icon_position(SLOT_STEPS)
     image(parent, x, y, ICON_SIZE, "ic_steps", tint=ACCENT, name="stepsIcon")
     # The goal is documented as never below 1000, but reads 0 when the
-    # watch has no health data (as on the emulator): no gauge then.
+    # watch has no health data (as on the emulator): the gauge is then an
+    # empty track (no division by zero).
     has_goal = "[STEP_GOAL] > 0"
     met = f"{has_goal} && [STEP_COUNT] >= [STEP_GOAL]"
-    goal_case, = condition(parent, [("hasStepGoal", has_goal)], default=False)
-    gauge(goal_case, SLOT_STEPS, "[STEP_COUNT] / [STEP_GOAL]", met,
-          goal_colors("[STEP_PERCENT]", met))
+    progress = f"({has_goal} ? [STEP_COUNT] / [STEP_GOAL] : 0)"
+    gauge(parent, SLOT_STEPS, progress, met, goal_colors("[STEP_PERCENT]", met))
     x, y = value_position(SLOT_STEPS)
     size = VALUE_SIZES[SLOT_STEPS] * R
     goal, normal = condition(parent, [("stepGoalMet", met)])
@@ -396,13 +459,25 @@ def steps_slot(parent):
     text(normal, x, y, 0.62 * R, size, "%d", ["[STEP_COUNT]"])
 
 
-def temperature_slot(parent):
-    """Weather temperature. Below 40 F (4.4 C) it is ice blue with a
-    snowflake above; above 90 F (32.2 C) it is red with heat waves."""
-    x, y = icon_position(SLOT_TEMPERATURE)
-    image(parent, x, y, ICON_SIZE, "ic_thermometer", tint=ACCENT, name="tempIcon")
-    x, y = value_position(SLOT_TEMPERATURE)
-    size = VALUE_SIZES[SLOT_TEMPERATURE] * R
+def weather_slot(parent):
+    """The current weather: an icon for the condition (day and night
+    versions where it matters) and the temperature in the watch's unit, ice
+    blue below 40 F (4.4 C) and red above 90 F (32.2 C). Without weather
+    data, just "--" (no icon). The icon, the temperature and today's
+    high/low are stacked in a column (see WEATHER_COLUMN_X and WEATHER_COLUMN_Y)."""
+    x = C + WEATHER_COLUMN_X * R
+    icon_y, temp_y, range_y = (C + f * R for f in WEATHER_COLUMN_Y)
+    y = icon_y
+    size = ICON_SIZE * WEATHER_ICON_SCALE
+    # No icon without weather data; the thermometer for an unknown condition.
+    available, = condition(parent, [("wxIcon", "[WEATHER.IS_AVAILABLE]")], default=False)
+    *matches, unknown = condition(available, [(n, e) for n, e, _ in WEATHER_ICONS])
+    for case, (_, _, resource) in zip(matches, WEATHER_ICONS):
+        image(case, x, y, size, resource, tint=ACCENT)
+    image(unknown, x, y, ICON_SIZE, "ic_thermometer", tint=ACCENT)
+
+    y = temp_y
+    size = VALUE_SIZES[SLOT_WEATHER] * R
     t = "[WEATHER.TEMPERATURE]"
     fahrenheit = "[WEATHER.TEMPERATURE_UNIT] == 2"
     cold = (f"[WEATHER.IS_AVAILABLE] && ({fahrenheit} ? {COLD_BELOW_F} > {t} "
@@ -411,14 +486,16 @@ def temperature_slot(parent):
            f": {t} > {HOT_ABOVE_C})")
     cold_case, hot_case, normal_case, none = condition(parent, [
         ("cold", cold), ("hot", hot), ("weather", "[WEATHER.IS_AVAILABLE]")])
-    symbol_y = y - size * 0.36 - R * 0.05 - 4
-    symbol = 2 * R * 0.05 + 4
-    image(cold_case, x, symbol_y, symbol, "ic_snowflake", tint=COLD)
     text(cold_case, x, y, 0.6 * R, size, "%d°", [t], color=COLD)
-    image(hot_case, x, symbol_y, symbol, "ic_heat", tint=RED)
     text(hot_case, x, y, 0.6 * R, size, "%d°", [t], color=RED)
     text(normal_case, x, y, 0.6 * R, size, "%d°", [t])
     text(none, x, y, 0.6 * R, size, "--", [])
+
+    # Today's high and low, smaller and gray, under the temperature.
+    weather, = condition(parent, [("weatherRange", "[WEATHER.IS_AVAILABLE]")], default=False)
+    text(weather, x, range_y, 0.5 * R, LABEL_SIZE * R, "%d°/%d°",
+         ["[WEATHER.DAY_TEMPERATURE_HIGH]", "[WEATHER.DAY_TEMPERATURE_LOW]"],
+         color=MINUTE_DOT)
 
 
 def cell_bounds(slot):
@@ -436,7 +513,8 @@ def cell_bounds(slot):
     return x0, y0, math.ceil(max(xs)) - x0, math.ceil(max(ys)) - y0
 
 
-def complication_slot(scene, slot, slot_id, display_name, default_source):
+def complication_slot(scene, slot, slot_id, display_name, source, source_type,
+                      system_source):
     """A stat from a complication data source, drawn like DataDial's own:
     the source's icon (tinted) toward the center, or its title if it has no
     icon; its text toward the edge; and a gauge for ranged and goal values."""
@@ -446,8 +524,9 @@ def complication_slot(scene, slot, slot_id, display_name, default_source):
             slotId=slot_id, displayName=display_name,
             supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY",
             isCustomizable="TRUE")
-    el(cs, "DefaultProviderPolicy", defaultSystemProvider=default_source,
-       defaultSystemProviderType="SHORT_TEXT")
+    el(cs, "DefaultProviderPolicy", defaultSystemProvider=system_source,
+       defaultSystemProviderType="SHORT_TEXT", primaryProvider=stats_source(source),
+       primaryProviderType=source_type)
     el(cs, "BoundingBox", x=0, y=0, width=w, height=h)
     ambient_hide(cs)
 
@@ -506,9 +585,9 @@ def stats(scene):
     ambient_hide(group)
     date_slot(group)
     heart_slot(group)
-    battery_slot(group)
+    uv_slot(group)
     steps_slot(group)
-    temperature_slot(group)
+    weather_slot(group)
 
 
 def hand_parts(clock, kind, resource, tint=None):
@@ -571,12 +650,15 @@ def digital_clock(parent):
 
 
 def clock(scene):
-    """Divider lines and the time, by the clock style setting."""
+    """Divider lines, the battery and the time, by the clock style
+    setting."""
     config = el(scene, "ListConfiguration", id="clockStyle")
     analog = el(config, "ListOption", id="0")
     divider_lines(analog, LINE_START)
+    battery(analog, C + R * ANALOG_BATTERY_Y, "battery")
     digital = el(config, "ListOption", id="1")
     divider_lines(digital, DIGITAL_LINE_START)
+    battery(digital, C + R * DIGITAL_BATTERY_Y, "batteryDigital")
     digital_clock(digital)
     return analog
 
@@ -605,8 +687,8 @@ def watch_face():
     scene = el(face, "Scene", backgroundColor="#000000")
     dial(scene)
     stats(scene)
-    for slot, slot_id, name, source in COMPLICATIONS:
-        complication_slot(scene, slot, slot_id, name, source)
+    for slot, *rest in COMPLICATIONS:
+        complication_slot(scene, slot, *rest)
     # The clock is drawn last, over the stats. Analog hands go in the
     # analog option of the clock style setting.
     analog = clock(scene)
@@ -765,31 +847,151 @@ def render_symbol(out, draw_fn, px=96):
     save_mask(mask, out, px)
 
 
-def snowflake(d, s):
-    """Six arms, each with a small V near its tip (DataDial's drawSnowflake)."""
-    c, r = s / 2, s * 0.45
-    pen = max(1, round(s * 0.06))
-    for k in range(6):
-        a = k * math.pi / 3
-        d.line([(c, c), (c + r * math.sin(a), c - r * math.cos(a))], fill=255, width=pen)
-        bx, by = c + r * 0.6 * math.sin(a), c - r * 0.6 * math.cos(a)
-        for side in (-1, 1):
-            b = a + side * math.pi / 4
-            d.line([(bx, by), (bx + r * 0.4 * math.sin(b), by - r * 0.4 * math.cos(b))],
-                   fill=255, width=pen)
+# ------------------------------------------------------------ weather icons
+# Drawn white on a mask (the face tints them), in a unit box: (0, 0) is the
+# top left of the icon and (1, 1) its bottom right.
 
 
-def heat(d, s):
-    """Three rising wavy lines, the middle one taller (DataDial's drawHeat)."""
-    c, r = s / 2, s * 0.45
-    pen = max(1, round(s * 0.06))
-    for w in (-1, 0, 1):
-        x0 = c + w * r * 0.6
-        top = c - r * (1.0 if w == 0 else 0.8)
-        bottom = c + r * (1.0 if w == 0 else 0.8)
-        pts = [(x0 + r * 0.18 * math.sin(t / 24 * 3 * math.pi), bottom + (top - bottom) * t / 24)
-               for t in range(25)]
-        d.line(pts, fill=255, width=pen, joint="curve")
+def _circle(d, s, cx, cy, r, fill=255):
+    d.ellipse([(cx - r) * s, (cy - r) * s, (cx + r) * s, (cy + r) * s], fill=fill)
+
+
+def _stroke(d, s, points, width, fill=255):
+    """A line with round ends."""
+    d.line([(x * s, y * s) for x, y in points], fill=fill, width=round(width * s), joint="curve")
+    for x, y in (points[0], points[-1]):
+        _circle(d, s, x, y, width / 2, fill)
+
+
+def _cloud(d, s, dx=0.0, dy=0.0, k=1.0, grow=0.0, fill=255):
+    """A cloud: three bumps on a flat base, centered on (0.5 + dx, 0.5 + dy)
+    and scaled by k. grow makes it larger all round (for a dark gap)."""
+    def p(x, y):
+        return 0.5 + dx + (x - 0.5) * k, 0.5 + dy + (y - 0.5) * k
+
+    for x, y, r in ((0.32, 0.58, 0.16), (0.52, 0.45, 0.22), (0.72, 0.59, 0.15)):
+        cx, cy = p(x, y)
+        _circle(d, s, cx, cy, r * k + grow, fill)
+    (x0, y0), (x1, y1) = p(0.32, 0.55), p(0.72, 0.74)
+    d.rectangle([x0 * s, y0 * s, x1 * s, (y1 + grow) * s], fill=fill)
+
+
+def _sun(d, s, cx=0.5, cy=0.5, r=0.17, rays=(0.27, 0.42), pen=0.07):
+    _circle(d, s, cx, cy, r)
+    for k in range(8):
+        a = k * math.pi / 4
+        _stroke(d, s, [(cx + rays[0] * math.sin(a), cy - rays[0] * math.cos(a)),
+                       (cx + rays[1] * math.sin(a), cy - rays[1] * math.cos(a))], pen)
+
+
+def _moon(d, s, cx=0.5, cy=0.5, r=0.32):
+    """A crescent opening to the upper right."""
+    _circle(d, s, cx, cy, r)
+    _circle(d, s, cx + 0.45 * r, cy - 0.35 * r, 0.82 * r, fill=0)
+
+
+def _partly(d, s, behind):
+    """The sun or moon (drawn by behind) with a cloud in front, a dark gap
+    between them."""
+    behind(d, s)
+    _cloud(d, s, dx=0.08, dy=0.12, k=0.85, grow=0.06, fill=0)
+    _cloud(d, s, dx=0.08, dy=0.12, k=0.85)
+
+
+def _precipitation(d, s, drops=(), flakes=(), length=0.16, pen=0.065):
+    """A raised cloud with rain drops (slanted strokes starting at the given
+    x) and snow flakes (dots at the given points) under it."""
+    _cloud(d, s, dy=-0.14, k=0.95)
+    for x in drops:
+        _stroke(d, s, [(x, 0.70), (x - length * 0.35, 0.70 + length)], pen)
+    for x, y in flakes:
+        _circle(d, s, x, y, 0.05)
+
+
+def _bolt(d, s):
+    _cloud(d, s, dy=-0.14, k=0.95)
+    shape = [(0.55, 0.60), (0.36, 0.80), (0.48, 0.80), (0.41, 0.97), (0.64, 0.73),
+             (0.52, 0.73), (0.60, 0.60)]
+    d.polygon([(x * s, y * s) for x, y in shape], fill=255)
+
+
+def _fog(d, s):
+    for y, x0, x1 in ((0.30, 0.22, 0.82), (0.44, 0.14, 0.86), (0.58, 0.18, 0.78),
+                      (0.72, 0.26, 0.86)):
+        _stroke(d, s, [(x0, y), (x1, y)], 0.075)
+
+
+def _mist(d, s):
+    """Like fog, but broken lines."""
+    for y, parts in ((0.36, ((0.16, 0.42), (0.54, 0.84))),
+                     (0.52, ((0.16, 0.30), (0.42, 0.84))),
+                     (0.68, ((0.16, 0.58), (0.70, 0.84)))):
+        for x0, x1 in parts:
+            _stroke(d, s, [(x0, y), (x1, y)], 0.07)
+
+
+def _wind(d, s):
+    """Three gusts with curled ends."""
+    pen = 0.07
+    w = round(pen * s)
+    for y, x0, x1, r, up in ((0.32, 0.12, 0.60, 0.09, True), (0.52, 0.08, 0.76, 0.11, True),
+                             (0.72, 0.16, 0.54, 0.09, False)):
+        _stroke(d, s, [(x0, y), (x1, y)], pen)
+        cy = y - r if up else y + r
+        box = [(x1 - r) * s, (cy - r) * s, (x1 + r) * s, (cy + r) * s]
+        # Angles clockwise from 3 o'clock: around the right side and on.
+        if up:
+            d.arc(box, 200, 90, fill=255, width=w)
+        else:
+            d.arc(box, 270, 160, fill=255, width=w)
+
+
+#: Weather icon images: drawable name and drawing.
+WEATHER_DRAWINGS = {
+    "ic_wx_sunny": lambda d, s: _sun(d, s),
+    "ic_wx_clear_night": lambda d, s: _moon(d, s),
+    "ic_wx_partly_day": lambda d, s: _partly(
+        d, s, lambda d, s: _sun(d, s, 0.34, 0.34, 0.12, (0.19, 0.29), 0.055)),
+    "ic_wx_partly_night": lambda d, s: _partly(d, s, lambda d, s: _moon(d, s, 0.36, 0.34, 0.21)),
+    "ic_wx_cloudy": lambda d, s: _cloud(d, s, dy=0.02, k=1.12),
+    "ic_wx_fog": _fog,
+    "ic_wx_mist": _mist,
+    "ic_wx_light_rain": lambda d, s: _precipitation(d, s, drops=(0.42, 0.64)),
+    "ic_wx_rain": lambda d, s: _precipitation(d, s, drops=(0.34, 0.53, 0.72)),
+    "ic_wx_heavy_rain": lambda d, s: _precipitation(
+        d, s, drops=(0.30, 0.45, 0.60, 0.75), length=0.22, pen=0.07),
+    "ic_wx_light_snow": lambda d, s: _precipitation(d, s, flakes=((0.40, 0.80), (0.62, 0.80))),
+    "ic_wx_snow": lambda d, s: _precipitation(
+        d, s, flakes=((0.32, 0.78), (0.52, 0.88), (0.70, 0.78))),
+    "ic_wx_heavy_snow": lambda d, s: _precipitation(
+        d, s, flakes=((0.28, 0.76), (0.48, 0.76), (0.68, 0.76), (0.38, 0.90), (0.58, 0.90))),
+    "ic_wx_sleet": lambda d, s: _precipitation(d, s, drops=(0.36, 0.70), flakes=((0.50, 0.84),)),
+    "ic_wx_thunderstorm": _bolt,
+    "ic_wx_windy": _wind,
+}
+
+#: Which icon the weather slot shows: expression name, expression and image,
+#: first match wins (see WEATHER.CONDITION in the Watch Face Format data
+#: sources). Unknown conditions show the thermometer.
+_WX = "[WEATHER.CONDITION]"
+WEATHER_ICONS = [
+    ("wxSunnyDay", f"({_WX} == 1 || {_WX} == 8) && [WEATHER.IS_DAY]", "ic_wx_sunny"),
+    ("wxClearNight", f"{_WX} == 1 || {_WX} == 8", "ic_wx_clear_night"),
+    ("wxPartlyDay", f"{_WX} == 14 && [WEATHER.IS_DAY]", "ic_wx_partly_day"),
+    ("wxPartlyNight", f"{_WX} == 14", "ic_wx_partly_night"),
+    ("wxCloudy", f"{_WX} == 2", "ic_wx_cloudy"),
+    ("wxFog", f"{_WX} == 3", "ic_wx_fog"),
+    ("wxMist", f"{_WX} == 13", "ic_wx_mist"),
+    ("wxLightRain", f"{_WX} == 12", "ic_wx_light_rain"),
+    ("wxRain", f"{_WX} == 6", "ic_wx_rain"),
+    ("wxHeavyRain", f"{_WX} == 4", "ic_wx_heavy_rain"),
+    ("wxLightSnow", f"{_WX} == 11", "ic_wx_light_snow"),
+    ("wxSnow", f"{_WX} == 7", "ic_wx_snow"),
+    ("wxHeavySnow", f"{_WX} == 5", "ic_wx_heavy_snow"),
+    ("wxSleet", f"{_WX} == 10", "ic_wx_sleet"),
+    ("wxThunderstorm", f"{_WX} == 9", "ic_wx_thunderstorm"),
+    ("wxWindy", f"{_WX} == 15", "ic_wx_windy"),
+]
 
 
 def render_bolt(out, px=96):
@@ -906,10 +1108,10 @@ def render_second_hand():
 def render_images():
     DRAWABLE.mkdir(parents=True, exist_ok=True)
     for svg, name in (("heart", "ic_heart"), ("steps", "ic_steps"),
-                      ("thermometer", "ic_thermometer")):
+                      ("thermometer", "ic_thermometer"), ("uv", "ic_uv")):
         render_icon(ART / f"{svg}.svg", DRAWABLE / f"{name}.png")
-    render_symbol(DRAWABLE / "ic_snowflake.png", snowflake)
-    render_symbol(DRAWABLE / "ic_heat.png", heat)
+    for name, draw_fn in WEATHER_DRAWINGS.items():
+        render_symbol(DRAWABLE / f"{name}.png", draw_fn)
     render_bolt(DRAWABLE / "ic_bolt.png")
     for name, (start, length, width) in (("hand_hour", HOUR_HAND), ("hand_minute", MINUTE_HAND)):
         render_hand(name, start, length, width, flat=False)
@@ -917,8 +1119,51 @@ def render_images():
     render_second_hand()
 
 
+#: DataDial Stats' icons: drawable name and the art/ SVG it comes from. The
+#: data source icons are white (the watch face tints them).
+STATS_ICONS = [("ic_calories", "flame"), ("ic_floors", "floors"),
+               ("ic_elevation", "mountain")]
+
+
+def vector(paths, color="#FFFFFF", background=None, scale=1.0):
+    """An Android vector drawable of 24 x 24 units from (path data, fill
+    rule) pairs, scaled about the center, optionally on a filled circle."""
+    root = ET.Element("vector", {
+        "xmlns:android": "http://schemas.android.com/apk/res/android",
+        "android:width": "24dp", "android:height": "24dp",
+        "android:viewportWidth": "24", "android:viewportHeight": "24"})
+    if background:
+        el(root, "path", **{"android:fillColor": background,
+                            "android:pathData": "M12 0A12 12 0 1 1 12 24A12 12 0 1 1 12 0Z"})
+    group = el(root, "group", **{"android:pivotX": "12", "android:pivotY": "12",
+                                 "android:scaleX": str(scale), "android:scaleY": str(scale)})
+    for d, rule in paths:
+        el(group, "path", **{"android:fillColor": color, "android:pathData": d,
+                             "android:fillType": "evenOdd" if rule == "evenodd" else "nonZero"})
+    ET.indent(root, space="    ")
+    return '<?xml version="1.0" encoding="utf-8"?>\n' + ET.tostring(root, encoding="unicode") + "\n"
+
+
+def svg_path_data(svg_file):
+    """The (path data, fill rule) pairs of one of DataDial's icon SVGs."""
+    return [(e.get("d"), e.get("fill-rule", "nonzero"))
+            for e in ET.parse(svg_file).getroot().iter() if e.tag.split("}")[-1] == "path"]
+
+
+def write_stats_icons():
+    out = STATS_RES / "drawable"
+    out.mkdir(parents=True, exist_ok=True)
+    icons = {name: vector(svg_path_data(ART / f"{svg}.svg")) for name, svg in STATS_ICONS}
+    # App icon: the elevation mountain in DataDial's blue on black.
+    icons["ic_launcher"] = vector(svg_path_data(ART / "mountain.svg"), color=PALETTE[0][1],
+                                  background="#000000", scale=0.6)
+    for name, xml in icons.items():
+        (out / f"{name}.xml").write_text(xml, encoding="utf-8", newline="\n")
+
+
 #: Fixed worst-case values for the test build (--test), to check the layout:
-#: the widest values, a goal gauge part way (yellow), charging, and hot.
+#: the widest values, a goal gauge part way (yellow) and charging. DataDial
+#: Stats has its own test values for its stats (build.sh test turns them on).
 TEST_VALUES = {
     "[STEP_COUNT]": "25000",
     "[STEP_GOAL]": "41667",
@@ -927,8 +1172,13 @@ TEST_VALUES = {
     "[BATTERY_PERCENT]": "100",
     "[BATTERY_CHARGING_STATUS]": "(1 == 1)",
     "[WEATHER.IS_AVAILABLE]": "(1 == 1)",
+    "[WEATHER.UV_INDEX]": "11",
+    "[WEATHER.CONDITION]": "8",
+    "[WEATHER.IS_DAY]": "(1 == 1)",
     "[WEATHER.TEMPERATURE]": "110",
     "[WEATHER.TEMPERATURE_UNIT]": "2",
+    "[WEATHER.DAY_TEMPERATURE_HIGH]": "112",
+    "[WEATHER.DAY_TEMPERATURE_LOW]": "95",
 }
 
 
@@ -951,6 +1201,7 @@ def write_xml(test=False):
 def main():
     test = "--test" in sys.argv[1:]
     render_images()  # first: the XML needs the hand image sizes
+    write_stats_icons()
     write_xml(test)
     print(f"Wrote {RES / 'raw' / 'watchface.xml'}{' (test values)' if test else ''}"
           f" and the images in {DRAWABLE}")

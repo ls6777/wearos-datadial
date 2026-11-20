@@ -269,116 +269,110 @@
                     </PartText>
                 </Default>
             </Condition>
+            <PartImage x="294" y="208" width="34" height="34" name="uvIcon" tintColor="[CONFIGURATION.accent.0]">
+                <Image resource="ic_uv" />
+            </PartImage>
             <Condition>
                 <Expressions>
-                    <Expression name="batteryLow">20 &gt; [BATTERY_PERCENT]</Expression>
+                    <Expression name="uvNone">![WEATHER.IS_AVAILABLE]</Expression>
+                    <Expression name="uvExtreme">[WEATHER.UV_INDEX] &gt;= 11</Expression>
+                    <Expression name="uvVeryHigh">[WEATHER.UV_INDEX] &gt;= 8</Expression>
+                    <Expression name="uvHigh">[WEATHER.UV_INDEX] &gt;= 6</Expression>
                 </Expressions>
-                <Compare expression="batteryLow">
-                    <PartDraw x="296" y="217" width="30" height="16">
-                        <RoundRectangle x="1" y="1" width="25" height="14" cornerRadiusX="4" cornerRadiusY="4">
-                            <Stroke color="#FF3B30" thickness="2" />
-                        </RoundRectangle>
-                        <Rectangle x="27" y="5.33" width="3" height="5.33">
-                            <Fill color="#FF3B30" />
-                        </Rectangle>
-                        <Rectangle x="4" y="4" width="19" height="8">
-                            <Fill color="#FF3B30" />
-                            <Transform target="width" value="clamp(19 * [BATTERY_PERCENT] / 100, 0.1, 19)" />
-                        </Rectangle>
-                    </PartDraw>
-                    <PartText x="310" y="202" width="135" height="45">
+                <Compare expression="uvNone">
+                    <PartText x="310" y="198" width="135" height="53">
                         <Text align="CENTER" ellipsis="TRUE">
-                            <Font size="34" color="#FF3B30" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                <Template>%d%%<Parameter expression="[BATTERY_PERCENT]" />
+                            <Font size="40.5" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                <Template>--</Template>
+                            </Font>
+                        </Text>
+                    </PartText>
+                </Compare>
+                <Compare expression="uvExtreme">
+                    <PartText x="310" y="198" width="135" height="53">
+                        <Text align="CENTER" ellipsis="TRUE">
+                            <Font size="40.5" color="#AF52DE" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                <Template>%d<Parameter expression="[WEATHER.UV_INDEX]" />
+                                </Template>
+                            </Font>
+                        </Text>
+                    </PartText>
+                </Compare>
+                <Compare expression="uvVeryHigh">
+                    <PartText x="310" y="198" width="135" height="53">
+                        <Text align="CENTER" ellipsis="TRUE">
+                            <Font size="40.5" color="#FF3B30" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                <Template>%d<Parameter expression="[WEATHER.UV_INDEX]" />
+                                </Template>
+                            </Font>
+                        </Text>
+                    </PartText>
+                </Compare>
+                <Compare expression="uvHigh">
+                    <PartText x="310" y="198" width="135" height="53">
+                        <Text align="CENTER" ellipsis="TRUE">
+                            <Font size="40.5" color="#FF9500" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                <Template>%d<Parameter expression="[WEATHER.UV_INDEX]" />
                                 </Template>
                             </Font>
                         </Text>
                     </PartText>
                 </Compare>
                 <Default>
-                    <PartDraw x="296" y="217" width="30" height="16">
-                        <RoundRectangle x="1" y="1" width="25" height="14" cornerRadiusX="4" cornerRadiusY="4">
-                            <Stroke color="[CONFIGURATION.accent.0]" thickness="2" />
-                        </RoundRectangle>
-                        <Rectangle x="27" y="5.33" width="3" height="5.33">
-                            <Fill color="[CONFIGURATION.accent.0]" />
-                        </Rectangle>
-                        <Rectangle x="4" y="4" width="19" height="8">
-                            <Fill color="[CONFIGURATION.accent.0]" />
-                            <Transform target="width" value="clamp(19 * [BATTERY_PERCENT] / 100, 0.1, 19)" />
-                        </Rectangle>
-                    </PartDraw>
-                    <PartText x="310" y="202" width="135" height="45">
+                    <PartText x="310" y="198" width="135" height="53">
                         <Text align="CENTER" ellipsis="TRUE">
-                            <Font size="34" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                <Template>%d%%<Parameter expression="[BATTERY_PERCENT]" />
+                            <Font size="40.5" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                <Template>%d<Parameter expression="[WEATHER.UV_INDEX]" />
                                 </Template>
                             </Font>
                         </Text>
                     </PartText>
                 </Default>
             </Condition>
-            <Condition>
-                <Expressions>
-                    <Expression name="charging">[BATTERY_CHARGING_STATUS]</Expression>
-                </Expressions>
-                <Compare expression="charging">
-                    <PartImage x="290" y="205" width="40" height="40" name="bolt">
-                        <Image resource="ic_bolt" />
-                    </PartImage>
-                </Compare>
-            </Condition>
             <PartImage x="268" y="268" width="34" height="34" name="stepsIcon" tintColor="[CONFIGURATION.accent.0]">
                 <Image resource="ic_steps" />
             </PartImage>
             <Condition>
                 <Expressions>
-                    <Expression name="hasStepGoal">[STEP_GOAL] &gt; 0</Expression>
+                    <Expression name="track3">!([STEP_GOAL] &gt; 0 &amp;&amp; [STEP_COUNT] &gt;= [STEP_GOAL])</Expression>
                 </Expressions>
-                <Compare expression="hasStepGoal">
-                    <Condition>
-                        <Expressions>
-                            <Expression name="track3">!([STEP_GOAL] &gt; 0 &amp;&amp; [STEP_COUNT] &gt;= [STEP_GOAL])</Expression>
-                        </Expressions>
-                        <Compare expression="track3">
-                            <PartDraw x="0" y="0" width="450" height="450">
-                                <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="117.5" endAngle="152.5">
-                                    <Stroke color="#333333" thickness="6" />
-                                </Arc>
-                            </PartDraw>
-                        </Compare>
-                    </Condition>
-                    <Condition>
-                        <Expressions>
-                            <Expression name="g3green">([STEP_GOAL] &gt; 0 &amp;&amp; [STEP_COUNT] &gt;= [STEP_GOAL]) || [STEP_PERCENT] &gt;= 90</Expression>
-                            <Expression name="g3yellow">[STEP_PERCENT] &gt;= 30</Expression>
-                        </Expressions>
-                        <Compare expression="g3green">
-                            <PartDraw x="0" y="0" width="450" height="450">
-                                <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
-                                    <Stroke color="#3DDC57" thickness="6" />
-                                    <Transform target="startAngle" value="152.5 + -35 * clamp([STEP_COUNT] / [STEP_GOAL], 0, 1)" />
-                                </Arc>
-                            </PartDraw>
-                        </Compare>
-                        <Compare expression="g3yellow">
-                            <PartDraw x="0" y="0" width="450" height="450">
-                                <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
-                                    <Stroke color="#FFD60A" thickness="6" />
-                                    <Transform target="startAngle" value="152.5 + -35 * clamp([STEP_COUNT] / [STEP_GOAL], 0, 1)" />
-                                </Arc>
-                            </PartDraw>
-                        </Compare>
-                        <Default>
-                            <PartDraw x="0" y="0" width="450" height="450">
-                                <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
-                                    <Stroke color="#FF3B30" thickness="6" />
-                                    <Transform target="startAngle" value="152.5 + -35 * clamp([STEP_COUNT] / [STEP_GOAL], 0, 1)" />
-                                </Arc>
-                            </PartDraw>
-                        </Default>
-                    </Condition>
+                <Compare expression="track3">
+                    <PartDraw x="0" y="0" width="450" height="450">
+                        <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="117.5" endAngle="152.5">
+                            <Stroke color="#333333" thickness="6" />
+                        </Arc>
+                    </PartDraw>
                 </Compare>
+            </Condition>
+            <Condition>
+                <Expressions>
+                    <Expression name="g3green">([STEP_GOAL] &gt; 0 &amp;&amp; [STEP_COUNT] &gt;= [STEP_GOAL]) || [STEP_PERCENT] &gt;= 90</Expression>
+                    <Expression name="g3yellow">[STEP_PERCENT] &gt;= 30</Expression>
+                </Expressions>
+                <Compare expression="g3green">
+                    <PartDraw x="0" y="0" width="450" height="450">
+                        <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
+                            <Stroke color="#3DDC57" thickness="6" />
+                            <Transform target="startAngle" value="152.5 + -35 * clamp(([STEP_GOAL] &gt; 0 ? [STEP_COUNT] / [STEP_GOAL] : 0), 0, 1)" />
+                        </Arc>
+                    </PartDraw>
+                </Compare>
+                <Compare expression="g3yellow">
+                    <PartDraw x="0" y="0" width="450" height="450">
+                        <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
+                            <Stroke color="#FFD60A" thickness="6" />
+                            <Transform target="startAngle" value="152.5 + -35 * clamp(([STEP_GOAL] &gt; 0 ? [STEP_COUNT] / [STEP_GOAL] : 0), 0, 1)" />
+                        </Arc>
+                    </PartDraw>
+                </Compare>
+                <Default>
+                    <PartDraw x="0" y="0" width="450" height="450">
+                        <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
+                            <Stroke color="#FF3B30" thickness="6" />
+                            <Transform target="startAngle" value="152.5 + -35 * clamp(([STEP_GOAL] &gt; 0 ? [STEP_COUNT] / [STEP_GOAL] : 0), 0, 1)" />
+                        </Arc>
+                    </PartDraw>
+                </Default>
             </Condition>
             <Condition>
                 <Expressions>
@@ -405,9 +399,118 @@
                     </PartText>
                 </Default>
             </Condition>
-            <PartImage x="148" y="148" width="34" height="34" name="tempIcon" tintColor="[CONFIGURATION.accent.0]">
-                <Image resource="ic_thermometer" />
-            </PartImage>
+            <Condition>
+                <Expressions>
+                    <Expression name="wxIcon">[WEATHER.IS_AVAILABLE]</Expression>
+                </Expressions>
+                <Compare expression="wxIcon">
+                    <Condition>
+                        <Expressions>
+                            <Expression name="wxSunnyDay">([WEATHER.CONDITION] == 1 || [WEATHER.CONDITION] == 8) &amp;&amp; [WEATHER.IS_DAY]</Expression>
+                            <Expression name="wxClearNight">[WEATHER.CONDITION] == 1 || [WEATHER.CONDITION] == 8</Expression>
+                            <Expression name="wxPartlyDay">[WEATHER.CONDITION] == 14 &amp;&amp; [WEATHER.IS_DAY]</Expression>
+                            <Expression name="wxPartlyNight">[WEATHER.CONDITION] == 14</Expression>
+                            <Expression name="wxCloudy">[WEATHER.CONDITION] == 2</Expression>
+                            <Expression name="wxFog">[WEATHER.CONDITION] == 3</Expression>
+                            <Expression name="wxMist">[WEATHER.CONDITION] == 13</Expression>
+                            <Expression name="wxLightRain">[WEATHER.CONDITION] == 12</Expression>
+                            <Expression name="wxRain">[WEATHER.CONDITION] == 6</Expression>
+                            <Expression name="wxHeavyRain">[WEATHER.CONDITION] == 4</Expression>
+                            <Expression name="wxLightSnow">[WEATHER.CONDITION] == 11</Expression>
+                            <Expression name="wxSnow">[WEATHER.CONDITION] == 7</Expression>
+                            <Expression name="wxHeavySnow">[WEATHER.CONDITION] == 5</Expression>
+                            <Expression name="wxSleet">[WEATHER.CONDITION] == 10</Expression>
+                            <Expression name="wxThunderstorm">[WEATHER.CONDITION] == 9</Expression>
+                            <Expression name="wxWindy">[WEATHER.CONDITION] == 15</Expression>
+                        </Expressions>
+                        <Compare expression="wxSunnyDay">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_sunny" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxClearNight">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_clear_night" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxPartlyDay">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_partly_day" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxPartlyNight">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_partly_night" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxCloudy">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_cloudy" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxFog">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_fog" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxMist">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_mist" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxLightRain">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_light_rain" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxRain">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_rain" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxHeavyRain">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_heavy_rain" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxLightSnow">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_light_snow" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxSnow">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_snow" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxHeavySnow">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_heavy_snow" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxSleet">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_sleet" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxThunderstorm">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_thunderstorm" />
+                            </PartImage>
+                        </Compare>
+                        <Compare expression="wxWindy">
+                            <PartImage x="107" y="62" width="38" height="38" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_wx_windy" />
+                            </PartImage>
+                        </Compare>
+                        <Default>
+                            <PartImage x="109" y="64" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                                <Image resource="ic_thermometer" />
+                            </PartImage>
+                        </Default>
+                    </Condition>
+                </Compare>
+            </Condition>
             <Condition>
                 <Expressions>
                     <Expression name="cold">[WEATHER.IS_AVAILABLE] &amp;&amp; ([WEATHER.TEMPERATURE_UNIT] == 2 ? 40 &gt; [WEATHER.TEMPERATURE] : 5 &gt; [WEATHER.TEMPERATURE])</Expression>
@@ -415,10 +518,7 @@
                     <Expression name="weather">[WEATHER.IS_AVAILABLE]</Expression>
                 </Expressions>
                 <Compare expression="cold">
-                    <PartImage x="103" y="68" width="27" height="27" tintColor="#4FC3F7">
-                        <Image resource="ic_snowflake" />
-                    </PartImage>
-                    <PartText x="49" y="90" width="135" height="53">
+                    <PartText x="58" y="95" width="135" height="53">
                         <Text align="CENTER" ellipsis="TRUE">
                             <Font size="40.5" color="#4FC3F7" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
                                 <Template>%d°<Parameter expression="[WEATHER.TEMPERATURE]" />
@@ -428,10 +528,7 @@
                     </PartText>
                 </Compare>
                 <Compare expression="hot">
-                    <PartImage x="103" y="68" width="27" height="27" tintColor="#FF3B30">
-                        <Image resource="ic_heat" />
-                    </PartImage>
-                    <PartText x="49" y="90" width="135" height="53">
+                    <PartText x="58" y="95" width="135" height="53">
                         <Text align="CENTER" ellipsis="TRUE">
                             <Font size="40.5" color="#FF3B30" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
                                 <Template>%d°<Parameter expression="[WEATHER.TEMPERATURE]" />
@@ -441,7 +538,7 @@
                     </PartText>
                 </Compare>
                 <Compare expression="weather">
-                    <PartText x="49" y="90" width="135" height="53">
+                    <PartText x="58" y="95" width="135" height="53">
                         <Text align="CENTER" ellipsis="TRUE">
                             <Font size="40.5" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
                                 <Template>%d°<Parameter expression="[WEATHER.TEMPERATURE]" />
@@ -451,7 +548,7 @@
                     </PartText>
                 </Compare>
                 <Default>
-                    <PartText x="49" y="90" width="135" height="53">
+                    <PartText x="58" y="95" width="135" height="53">
                         <Text align="CENTER" ellipsis="TRUE">
                             <Font size="40.5" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
                                 <Template>--</Template>
@@ -460,9 +557,25 @@
                     </PartText>
                 </Default>
             </Condition>
+            <Condition>
+                <Expressions>
+                    <Expression name="weatherRange">[WEATHER.IS_AVAILABLE]</Expression>
+                </Expressions>
+                <Compare expression="weatherRange">
+                    <PartText x="70" y="138" width="113" height="26">
+                        <Text align="CENTER" ellipsis="TRUE">
+                            <Font size="19.4" color="#B0B0B0" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                <Template>%d°/%d°<Parameter expression="[WEATHER.DAY_TEMPERATURE_HIGH]" />
+                                    <Parameter expression="[WEATHER.DAY_TEMPERATURE_LOW]" />
+                                </Template>
+                            </Font>
+                        </Text>
+                    </PartText>
+                </Compare>
+            </Condition>
         </Group>
         <ComplicationSlot x="149" y="287" width="152" height="137" slotId="1" displayName="slot_bottom" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="TRUE">
-            <DefaultProviderPolicy defaultSystemProvider="SUNRISE_SUNSET" defaultSystemProviderType="SHORT_TEXT" />
+            <DefaultProviderPolicy defaultSystemProvider="SUNRISE_SUNSET" defaultSystemProviderType="SHORT_TEXT" primaryProvider="io.github.ls6777.datadial.stats/io.github.ls6777.datadial.stats.CaloriesSource" primaryProviderType="SHORT_TEXT" />
             <BoundingBox x="0" y="0" width="152" height="137" />
             <Variant mode="AMBIENT" target="alpha" value="0" />
             <Complication type="SHORT_TEXT">
@@ -524,7 +637,7 @@
                     </Expressions>
                     <Compare expression="track4">
                         <PartDraw x="-149" y="-287" width="450" height="450">
-                            <Arc centerX="76" centerY="-62" width="384.75" height="384.75" startAngle="162.5" endAngle="197.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="162.5" endAngle="197.5">
                                 <Stroke color="#333333" thickness="6" />
                             </Arc>
                         </PartDraw>
@@ -537,7 +650,7 @@
                     </Expressions>
                     <Compare expression="g4green">
                         <PartDraw x="-149" y="-287" width="450" height="450">
-                            <Arc centerX="76" centerY="-62" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
                                 <Stroke color="#3DDC57" thickness="6" />
                                 <Transform target="startAngle" value="197.5 + -35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
                             </Arc>
@@ -545,7 +658,7 @@
                     </Compare>
                     <Compare expression="g4yellow">
                         <PartDraw x="-149" y="-287" width="450" height="450">
-                            <Arc centerX="76" centerY="-62" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
                                 <Stroke color="#FFD60A" thickness="6" />
                                 <Transform target="startAngle" value="197.5 + -35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
                             </Arc>
@@ -553,7 +666,7 @@
                     </Compare>
                     <Default>
                         <PartDraw x="-149" y="-287" width="450" height="450">
-                            <Arc centerX="76" centerY="-62" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
                                 <Stroke color="#FF3B30" thickness="6" />
                                 <Transform target="startAngle" value="197.5 + -35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
                             </Arc>
@@ -614,7 +727,7 @@
                     </Expressions>
                     <Compare expression="track4">
                         <PartDraw x="-149" y="-287" width="450" height="450">
-                            <Arc centerX="76" centerY="-62" width="384.75" height="384.75" startAngle="162.5" endAngle="197.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="162.5" endAngle="197.5">
                                 <Stroke color="#333333" thickness="6" />
                             </Arc>
                         </PartDraw>
@@ -627,7 +740,7 @@
                     </Expressions>
                     <Compare expression="g4green">
                         <PartDraw x="-149" y="-287" width="450" height="450">
-                            <Arc centerX="76" centerY="-62" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
                                 <Stroke color="#3DDC57" thickness="6" />
                                 <Transform target="startAngle" value="197.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
@@ -635,7 +748,7 @@
                     </Compare>
                     <Compare expression="g4yellow">
                         <PartDraw x="-149" y="-287" width="450" height="450">
-                            <Arc centerX="76" centerY="-62" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
                                 <Stroke color="#FFD60A" thickness="6" />
                                 <Transform target="startAngle" value="197.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
@@ -643,7 +756,7 @@
                     </Compare>
                     <Default>
                         <PartDraw x="-149" y="-287" width="450" height="450">
-                            <Arc centerX="76" centerY="-62" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="197.5" endAngle="197.5">
                                 <Stroke color="#FF3B30" thickness="6" />
                                 <Transform target="startAngle" value="197.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
@@ -687,7 +800,7 @@
             </Complication>
         </ComplicationSlot>
         <ComplicationSlot x="41" y="250" width="159" height="159" slotId="2" displayName="slot_lower_left" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="TRUE">
-            <DefaultProviderPolicy defaultSystemProvider="UNREAD_NOTIFICATION_COUNT" defaultSystemProviderType="SHORT_TEXT" />
+            <DefaultProviderPolicy defaultSystemProvider="UNREAD_NOTIFICATION_COUNT" defaultSystemProviderType="SHORT_TEXT" primaryProvider="io.github.ls6777.datadial.stats/io.github.ls6777.datadial.stats.FloorsSource" primaryProviderType="GOAL_PROGRESS" />
             <BoundingBox x="0" y="0" width="159" height="159" />
             <Variant mode="AMBIENT" target="alpha" value="0" />
             <Complication type="SHORT_TEXT">
@@ -749,7 +862,7 @@
                     </Expressions>
                     <Compare expression="track5">
                         <PartDraw x="-41" y="-250" width="450" height="450">
-                            <Arc centerX="184" centerY="-25" width="384.75" height="384.75" startAngle="207.5" endAngle="242.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="207.5" endAngle="242.5">
                                 <Stroke color="#333333" thickness="6" />
                             </Arc>
                         </PartDraw>
@@ -762,7 +875,7 @@
                     </Expressions>
                     <Compare expression="g5green">
                         <PartDraw x="-41" y="-250" width="450" height="450">
-                            <Arc centerX="184" centerY="-25" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
                                 <Stroke color="#3DDC57" thickness="6" />
                                 <Transform target="endAngle" value="207.5 + 35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
                             </Arc>
@@ -770,7 +883,7 @@
                     </Compare>
                     <Compare expression="g5yellow">
                         <PartDraw x="-41" y="-250" width="450" height="450">
-                            <Arc centerX="184" centerY="-25" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
                                 <Stroke color="#FFD60A" thickness="6" />
                                 <Transform target="endAngle" value="207.5 + 35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
                             </Arc>
@@ -778,7 +891,7 @@
                     </Compare>
                     <Default>
                         <PartDraw x="-41" y="-250" width="450" height="450">
-                            <Arc centerX="184" centerY="-25" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
                                 <Stroke color="#FF3B30" thickness="6" />
                                 <Transform target="endAngle" value="207.5 + 35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
                             </Arc>
@@ -839,7 +952,7 @@
                     </Expressions>
                     <Compare expression="track5">
                         <PartDraw x="-41" y="-250" width="450" height="450">
-                            <Arc centerX="184" centerY="-25" width="384.75" height="384.75" startAngle="207.5" endAngle="242.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="207.5" endAngle="242.5">
                                 <Stroke color="#333333" thickness="6" />
                             </Arc>
                         </PartDraw>
@@ -852,7 +965,7 @@
                     </Expressions>
                     <Compare expression="g5green">
                         <PartDraw x="-41" y="-250" width="450" height="450">
-                            <Arc centerX="184" centerY="-25" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
                                 <Stroke color="#3DDC57" thickness="6" />
                                 <Transform target="endAngle" value="207.5 + 35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
@@ -860,7 +973,7 @@
                     </Compare>
                     <Compare expression="g5yellow">
                         <PartDraw x="-41" y="-250" width="450" height="450">
-                            <Arc centerX="184" centerY="-25" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
                                 <Stroke color="#FFD60A" thickness="6" />
                                 <Transform target="endAngle" value="207.5 + 35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
@@ -868,7 +981,7 @@
                     </Compare>
                     <Default>
                         <PartDraw x="-41" y="-250" width="450" height="450">
-                            <Arc centerX="184" centerY="-25" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="207.5" endAngle="207.5">
                                 <Stroke color="#FF3B30" thickness="6" />
                                 <Transform target="endAngle" value="207.5 + 35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
@@ -912,7 +1025,7 @@
             </Complication>
         </ComplicationSlot>
         <ComplicationSlot x="26" y="149" width="137" height="152" slotId="3" displayName="slot_left" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="TRUE">
-            <DefaultProviderPolicy defaultSystemProvider="WORLD_CLOCK" defaultSystemProviderType="SHORT_TEXT" />
+            <DefaultProviderPolicy defaultSystemProvider="WORLD_CLOCK" defaultSystemProviderType="SHORT_TEXT" primaryProvider="io.github.ls6777.datadial.stats/io.github.ls6777.datadial.stats.ElevationSource" primaryProviderType="SHORT_TEXT" />
             <BoundingBox x="0" y="0" width="137" height="152" />
             <Variant mode="AMBIENT" target="alpha" value="0" />
             <Complication type="SHORT_TEXT">
@@ -974,7 +1087,7 @@
                     </Expressions>
                     <Compare expression="track6">
                         <PartDraw x="-26" y="-149" width="450" height="450">
-                            <Arc centerX="199" centerY="76" width="384.75" height="384.75" startAngle="252.5" endAngle="287.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="252.5" endAngle="287.5">
                                 <Stroke color="#333333" thickness="6" />
                             </Arc>
                         </PartDraw>
@@ -987,7 +1100,7 @@
                     </Expressions>
                     <Compare expression="g6green">
                         <PartDraw x="-26" y="-149" width="450" height="450">
-                            <Arc centerX="199" centerY="76" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
                                 <Stroke color="#3DDC57" thickness="6" />
                                 <Transform target="endAngle" value="252.5 + 35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
                             </Arc>
@@ -995,7 +1108,7 @@
                     </Compare>
                     <Compare expression="g6yellow">
                         <PartDraw x="-26" y="-149" width="450" height="450">
-                            <Arc centerX="199" centerY="76" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
                                 <Stroke color="#FFD60A" thickness="6" />
                                 <Transform target="endAngle" value="252.5 + 35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
                             </Arc>
@@ -1003,7 +1116,7 @@
                     </Compare>
                     <Default>
                         <PartDraw x="-26" y="-149" width="450" height="450">
-                            <Arc centerX="199" centerY="76" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
                                 <Stroke color="#FF3B30" thickness="6" />
                                 <Transform target="endAngle" value="252.5 + 35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
                             </Arc>
@@ -1064,7 +1177,7 @@
                     </Expressions>
                     <Compare expression="track6">
                         <PartDraw x="-26" y="-149" width="450" height="450">
-                            <Arc centerX="199" centerY="76" width="384.75" height="384.75" startAngle="252.5" endAngle="287.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="252.5" endAngle="287.5">
                                 <Stroke color="#333333" thickness="6" />
                             </Arc>
                         </PartDraw>
@@ -1077,7 +1190,7 @@
                     </Expressions>
                     <Compare expression="g6green">
                         <PartDraw x="-26" y="-149" width="450" height="450">
-                            <Arc centerX="199" centerY="76" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
                                 <Stroke color="#3DDC57" thickness="6" />
                                 <Transform target="endAngle" value="252.5 + 35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
@@ -1085,7 +1198,7 @@
                     </Compare>
                     <Compare expression="g6yellow">
                         <PartDraw x="-26" y="-149" width="450" height="450">
-                            <Arc centerX="199" centerY="76" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
                                 <Stroke color="#FFD60A" thickness="6" />
                                 <Transform target="endAngle" value="252.5 + 35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
@@ -1093,7 +1206,7 @@
                     </Compare>
                     <Default>
                         <PartDraw x="-26" y="-149" width="450" height="450">
-                            <Arc centerX="199" centerY="76" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="252.5" endAngle="252.5">
                                 <Stroke color="#FF3B30" thickness="6" />
                                 <Transform target="endAngle" value="252.5 + 35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
@@ -1165,6 +1278,68 @@
                         <Stroke color="[CONFIGURATION.accent.0]" thickness="2" />
                     </Line>
                 </PartDraw>
+                <Group name="battery" x="0" y="0" width="450" height="450">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Condition>
+                        <Expressions>
+                            <Expression name="batteryLow">20 &gt; [BATTERY_PERCENT]</Expression>
+                        </Expressions>
+                        <Compare expression="batteryLow">
+                            <PartDraw x="213" y="196" width="24" height="13">
+                                <RoundRectangle x="1" y="1" width="20" height="11" cornerRadiusX="4" cornerRadiusY="4">
+                                    <Stroke color="#FF3B30" thickness="2" />
+                                </RoundRectangle>
+                                <Rectangle x="22" y="4.33" width="2" height="4.33">
+                                    <Fill color="#FF3B30" />
+                                </Rectangle>
+                                <Rectangle x="4" y="4" width="14" height="5">
+                                    <Fill color="#FF3B30" />
+                                    <Transform target="width" value="clamp(14 * [BATTERY_PERCENT] / 100, 0.1, 14)" />
+                                </Rectangle>
+                            </PartDraw>
+                            <PartText x="193" y="166" width="64" height="28">
+                                <Text align="CENTER" ellipsis="TRUE">
+                                    <Font size="21.1" color="#FF3B30" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                        <Template>%d%%<Parameter expression="[BATTERY_PERCENT]" />
+                                        </Template>
+                                    </Font>
+                                </Text>
+                            </PartText>
+                        </Compare>
+                        <Default>
+                            <PartDraw x="213" y="196" width="24" height="13">
+                                <RoundRectangle x="1" y="1" width="20" height="11" cornerRadiusX="4" cornerRadiusY="4">
+                                    <Stroke color="[CONFIGURATION.accent.0]" thickness="2" />
+                                </RoundRectangle>
+                                <Rectangle x="22" y="4.33" width="2" height="4.33">
+                                    <Fill color="[CONFIGURATION.accent.0]" />
+                                </Rectangle>
+                                <Rectangle x="4" y="4" width="14" height="5">
+                                    <Fill color="[CONFIGURATION.accent.0]" />
+                                    <Transform target="width" value="clamp(14 * [BATTERY_PERCENT] / 100, 0.1, 14)" />
+                                </Rectangle>
+                            </PartDraw>
+                            <PartText x="193" y="166" width="64" height="28">
+                                <Text align="CENTER" ellipsis="TRUE">
+                                    <Font size="21.1" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                        <Template>%d%%<Parameter expression="[BATTERY_PERCENT]" />
+                                        </Template>
+                                    </Font>
+                                </Text>
+                            </PartText>
+                        </Default>
+                    </Condition>
+                    <Condition>
+                        <Expressions>
+                            <Expression name="batteryCharging">[BATTERY_CHARGING_STATUS]</Expression>
+                        </Expressions>
+                        <Compare expression="batteryCharging">
+                            <PartImage x="209" y="187" width="32" height="32">
+                                <Image resource="ic_bolt" />
+                            </PartImage>
+                        </Compare>
+                    </Condition>
+                </Group>
                 <AnalogClock x="0" y="0" width="450" height="450" name="hands">
                     <Variant mode="AMBIENT" target="alpha" value="0" />
                     <HourHand resource="hand_hour" x="216" y="106" width="18" height="122" pivotX="0.5" pivotY="0.98" />
@@ -1229,6 +1404,68 @@
                         <Stroke color="[CONFIGURATION.accent.0]" thickness="2" />
                     </Line>
                 </PartDraw>
+                <Group name="batteryDigital" x="0" y="0" width="450" height="450">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Condition>
+                        <Expressions>
+                            <Expression name="batteryDigitalLow">20 &gt; [BATTERY_PERCENT]</Expression>
+                        </Expressions>
+                        <Compare expression="batteryDigitalLow">
+                            <PartDraw x="213" y="165" width="24" height="13">
+                                <RoundRectangle x="1" y="1" width="20" height="11" cornerRadiusX="4" cornerRadiusY="4">
+                                    <Stroke color="#FF3B30" thickness="2" />
+                                </RoundRectangle>
+                                <Rectangle x="22" y="4.33" width="2" height="4.33">
+                                    <Fill color="#FF3B30" />
+                                </Rectangle>
+                                <Rectangle x="4" y="4" width="14" height="5">
+                                    <Fill color="#FF3B30" />
+                                    <Transform target="width" value="clamp(14 * [BATTERY_PERCENT] / 100, 0.1, 14)" />
+                                </Rectangle>
+                            </PartDraw>
+                            <PartText x="193" y="134" width="64" height="28">
+                                <Text align="CENTER" ellipsis="TRUE">
+                                    <Font size="21.1" color="#FF3B30" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                        <Template>%d%%<Parameter expression="[BATTERY_PERCENT]" />
+                                        </Template>
+                                    </Font>
+                                </Text>
+                            </PartText>
+                        </Compare>
+                        <Default>
+                            <PartDraw x="213" y="165" width="24" height="13">
+                                <RoundRectangle x="1" y="1" width="20" height="11" cornerRadiusX="4" cornerRadiusY="4">
+                                    <Stroke color="[CONFIGURATION.accent.0]" thickness="2" />
+                                </RoundRectangle>
+                                <Rectangle x="22" y="4.33" width="2" height="4.33">
+                                    <Fill color="[CONFIGURATION.accent.0]" />
+                                </Rectangle>
+                                <Rectangle x="4" y="4" width="14" height="5">
+                                    <Fill color="[CONFIGURATION.accent.0]" />
+                                    <Transform target="width" value="clamp(14 * [BATTERY_PERCENT] / 100, 0.1, 14)" />
+                                </Rectangle>
+                            </PartDraw>
+                            <PartText x="193" y="134" width="64" height="28">
+                                <Text align="CENTER" ellipsis="TRUE">
+                                    <Font size="21.1" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                        <Template>%d%%<Parameter expression="[BATTERY_PERCENT]" />
+                                        </Template>
+                                    </Font>
+                                </Text>
+                            </PartText>
+                        </Default>
+                    </Condition>
+                    <Condition>
+                        <Expressions>
+                            <Expression name="batteryDigitalCharging">[BATTERY_CHARGING_STATUS]</Expression>
+                        </Expressions>
+                        <Compare expression="batteryDigitalCharging">
+                            <PartImage x="209" y="155" width="32" height="32">
+                                <Image resource="ic_bolt" />
+                            </PartImage>
+                        </Compare>
+                    </Condition>
+                </Group>
                 <Group name="time" x="0" y="0" width="450" height="450">
                     <Variant mode="AMBIENT" target="alpha" value="154" />
                     <Condition>

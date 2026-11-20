@@ -14,4 +14,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "DataDial"
-include(":watchface")
+include(":watchface", ":stats")
