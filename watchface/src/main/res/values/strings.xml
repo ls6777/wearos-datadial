@@ -23,4 +23,5 @@
     <string name="slot_bottom">6 o\'clock stat</string>
     <string name="slot_lower_left">7:30 stat</string>
     <string name="slot_left">9 o\'clock stat</string>
+    <string name="slot_steps">Steps</string>
 </resources>

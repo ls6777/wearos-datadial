@@ -1,6 +1,7 @@
 /**
  * @file Health.kt
- * Daily calories and floors from Health Services' passive monitoring.
+ * The watch's own daily steps, calories and floors from Health Services'
+ * passive monitoring.
  */
 package io.github.ls6777.datadial.stats
 
@@ -21,7 +22,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.ZoneId
 
 /** Registration with Health Services. Not instantiable. */
 object Health {
@@ -29,13 +29,10 @@ object Health {
     private const val FLUSH_INTERVAL = 60_000L
     private var lastFlush = 0L
 
-    /** The Health Services data type for each daily total. */
-    internal val TYPES = mapOf(
-        Daily.CALORIES to DataType.CALORIES_DAILY,
-        Daily.FLOORS to DataType.FLOORS_DAILY,
-    )
+    /** The Health Services data types for the daily totals. */
+    private val TYPES = setOf(DataType.STEPS_DAILY, DataType.CALORIES_DAILY, DataType.FLOORS_DAILY)
 
-    /** Whether the app may read activity data (calories and floors). */
+    /** Whether the app may read activity data (steps, calories and floors). */
     fun permitted(context: Context): Boolean =
         context.checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) ==
             PackageManager.PERMISSION_GRANTED
@@ -50,7 +47,7 @@ object Health {
         return try {
             val client = HealthServices.getClient(context).passiveMonitoringClient
             val supported = client.getCapabilitiesAsync().await().supportedDataTypesPassiveMonitoring
-            val types = TYPES.values.filter { it in supported }.toSet()
+            val types = TYPES.filter { it in supported }.toSet()
             if (types.isEmpty()) return "not supported on this watch"
             val config = PassiveListenerConfig.builder().setDataTypes(types).build()
             client.setPassiveListenerServiceAsync(PassiveDataService::class.java, config).await()
@@ -79,22 +76,38 @@ object Health {
     }
 }
 
-/** Receives the daily totals from Health Services and updates the data sources. */
+/**
+ * Receives the daily totals from Health Services. The face gets them live
+ * (see [Live]); they are stored to carry them over a restart, to line them
+ * up with Google Health's totals, and for the app's screen.
+ */
 class PassiveDataService : PassiveListenerService() {
     override fun onNewDataPointsReceived(dataPoints: DataPointContainer) {
         val boot = Instant.ofEpochMilli(System.currentTimeMillis() - SystemClock.elapsedRealtime())
+        val points = mapOf(
+            Daily.STEPS to dataPoints.getData(DataType.STEPS_DAILY).map { it.getEndInstant(boot) to it.value.toDouble() },
+            Daily.CALORIES to dataPoints.getData(DataType.CALORIES_DAILY).map { it.getEndInstant(boot) to it.value },
+            Daily.FLOORS to dataPoints.getData(DataType.FLOORS_DAILY).map { it.getEndInstant(boot) to it.value },
+        )
         val received = mutableListOf<String>()
-        for ((daily, type) in Health.TYPES) {
-            // Each point is the day's total so far: keep the newest.
-            val point = dataPoints.getData(type).maxByOrNull { it.endDurationFromBoot } ?: continue
-            val day = point.getEndInstant(boot).atZone(ZoneId.systemDefault()).toLocalDate()
-            received += "${daily.name.lowercase()} ${point.value.toInt()}"
-            // For the app's screen: the face gets live values (see CaloriesSource).
-            Store.setDaily(this, daily, point.value, day)
+        var restarted = false
+        for ((daily, list) in points) {
+            // Each point is the day's total so far, oldest first.
+            for ((at, value) in list.sortedBy { it.first }) {
+                restarted = Store.addDaily(this, daily, value, at) || restarted
+            }
+            list.maxByOrNull { it.first }?.let { received += "${daily.name.lowercase()} ${it.second.toLong()}" }
         }
         Log.i(Sources.TAG, "Health Services delivery: ${received.joinToString().ifEmpty { "nothing new" }}")
-        // The app is awake anyway: refresh the sensor stats too.
+        if (restarted) {
+            // The watch restarted: the face needs the new carry.
+            Log.i(Sources.TAG, "Watch restarted: carrying over today's totals")
+            Sources.updateDaily(this)
+        }
+        // The app is awake anyway: refresh the sensor stats, and ask the phone
+        // for Google Health's totals now and then.
         Sources.updateSensors(this)
+        Phone.requestRefresh(this)
     }
 }
 
@@ -103,6 +116,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             Health.registerAsync(context)
+            Phone.requestRefresh(context, force = true)
         }
     }
 }

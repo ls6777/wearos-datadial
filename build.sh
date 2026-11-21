@@ -2,9 +2,12 @@
 # Build DataDial for Wear OS.
 #
 #   ./build.sh          generate the watch face XML and images, build the debug APKs
-#                       (the watch face and the DataDial Stats companion app)
-#   ./build.sh run      also install both on the connected watch or emulator and
-#                       make DataDial the active watch face
+#                       (the watch face, and DataDial Stats for the watch and phone)
+#   ./build.sh run      also install the watch face and DataDial Stats on the
+#                       connected watch or emulator and make DataDial the active
+#                       watch face
+#   ./build.sh phone    build DataDial Stats for the phone and install it on the
+#                       connected phone
 #   ./build.sh test     like run, but with fixed worst-case values (see TEST_VALUES
 #                       in tools/generate.py, and DataDial Stats' test values); the
 #                       normal XML is written back after
@@ -14,7 +17,8 @@
 #                       a stat (and the value), and each Health Services delivery
 #
 # Uses the JDK bundled with Android Studio unless JAVA_HOME is set, and the
-# SDK in the default Android Studio location unless ANDROID_HOME is set.
+# SDK in the default Android Studio location unless ANDROID_HOME is set. With
+# several devices connected, set ANDROID_SERIAL to the one to install on.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -57,6 +61,12 @@ case "${1:-}" in
         "$ADB" logcat -v time -s DataDialStats
         exit
         ;;
+    phone)
+        "$GRADLE" :phone:assembleDebug --console=plain -q
+        "$ADB" install -r phone/build/outputs/apk/debug/phone-debug.apk
+        echo "Installed. Open DataDial Stats on the phone and tap Allow access."
+        exit
+        ;;
     test)
         # Always put the normal XML back, even if the build fails.
         trap 'python tools/generate.py > /dev/null' EXIT
@@ -72,19 +82,21 @@ python tools/generate.py
 case "${1:-}" in
     "")
         "$GRADLE" assembleDebug --console=plain -q
-        echo "Built watchface/build/outputs/apk/debug/watchface-debug.apk"
-        echo "  and stats/build/outputs/apk/debug/stats-debug.apk"
+        echo "Built watchface/build/outputs/apk/debug/watchface-debug.apk,"
+        echo "  stats/build/outputs/apk/debug/stats-debug.apk"
+        echo "  and phone/build/outputs/apk/debug/phone-debug.apk"
         ;;
     run)
         install_and_show false
         ;;
     release)
         "$GRADLE" bundleRelease --console=plain -q
-        echo "Built watchface/build/outputs/bundle/release/watchface-release.aab"
-        echo "  and stats/build/outputs/bundle/release/stats-release.aab"
+        echo "Built watchface/build/outputs/bundle/release/watchface-release.aab,"
+        echo "  stats/build/outputs/bundle/release/stats-release.aab"
+        echo "  and phone/build/outputs/bundle/release/phone-release.aab"
         ;;
     *)
-        echo "usage: $0 [run|test|release|log|statslog]" >&2
+        echo "usage: $0 [run|test|phone|release|log|statslog]" >&2
         exit 2
         ;;
 esac

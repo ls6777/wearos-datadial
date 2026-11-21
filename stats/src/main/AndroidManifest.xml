@@ -3,7 +3,7 @@
 
     <uses-feature android:name="android.hardware.type.watch" />
 
-    <!-- Daily calories and floors from Health Services. -->
+    <!-- Daily steps, calories and floors from Health Services. -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <!-- Health Services passive listeners don't survive a reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -30,8 +30,28 @@
         </activity>
 
         <!-- Complication data sources. DataDial uses them as the defaults of
-             its 6, 7:30 and 9 o'clock stats, so it
-             is listed as a safe watch face for each. -->
+             its 4:30, 6, 7:30 and 9 o'clock stats, so it is listed as a safe
+             watch face for each. -->
+        <service
+            android:name=".StepsSource"
+            android:label="@string/steps"
+            android:icon="@drawable/ic_steps"
+            android:exported="true"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="GOAL_PROGRESS,SHORT_TEXT" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="300" />
+            <meta-data
+                android:name="android.support.wearable.complications.SAFE_WATCH_FACES"
+                android:value="io.github.ls6777.datadial" />
+        </service>
+
         <service
             android:name=".CaloriesSource"
             android:label="@string/calories"
@@ -97,6 +117,19 @@
             android:name=".PassiveDataService"
             android:exported="true"
             android:permission="com.google.android.wearable.healthservices.permission.PASSIVE_DATA_BINDING" />
+
+        <!-- Receives Google Health's totals from the phone app. -->
+        <service
+            android:name=".PhoneListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:path="/datadial/totals" />
+            </intent-filter>
+        </service>
 
         <receiver
             android:name=".BootReceiver"

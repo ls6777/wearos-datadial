@@ -390,76 +390,6 @@
                     </PartText>
                 </Default>
             </Condition>
-            <PartImage x="268" y="268" width="34" height="34" name="stepsIcon" tintColor="[CONFIGURATION.accent.0]">
-                <Image resource="ic_steps" />
-            </PartImage>
-            <Condition>
-                <Expressions>
-                    <Expression name="track3">!([STEP_GOAL] &gt; 0 &amp;&amp; [STEP_COUNT] &gt;= [STEP_GOAL])</Expression>
-                </Expressions>
-                <Compare expression="track3">
-                    <PartDraw x="0" y="0" width="450" height="450">
-                        <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="117.5" endAngle="152.5">
-                            <Stroke color="#333333" thickness="6" />
-                        </Arc>
-                    </PartDraw>
-                </Compare>
-            </Condition>
-            <Condition>
-                <Expressions>
-                    <Expression name="g3green">([STEP_GOAL] &gt; 0 &amp;&amp; [STEP_COUNT] &gt;= [STEP_GOAL]) || [STEP_PERCENT] &gt;= 90</Expression>
-                    <Expression name="g3yellow">[STEP_PERCENT] &gt;= 30</Expression>
-                </Expressions>
-                <Compare expression="g3green">
-                    <PartDraw x="0" y="0" width="450" height="450">
-                        <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
-                            <Stroke color="#3DDC57" thickness="6" />
-                            <Transform target="startAngle" value="152.5 + -35 * clamp(([STEP_GOAL] &gt; 0 ? [STEP_COUNT] / [STEP_GOAL] : 0), 0, 1)" />
-                        </Arc>
-                    </PartDraw>
-                </Compare>
-                <Compare expression="g3yellow">
-                    <PartDraw x="0" y="0" width="450" height="450">
-                        <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
-                            <Stroke color="#FFD60A" thickness="6" />
-                            <Transform target="startAngle" value="152.5 + -35 * clamp(([STEP_GOAL] &gt; 0 ? [STEP_COUNT] / [STEP_GOAL] : 0), 0, 1)" />
-                        </Arc>
-                    </PartDraw>
-                </Compare>
-                <Default>
-                    <PartDraw x="0" y="0" width="450" height="450">
-                        <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
-                            <Stroke color="#FF3B30" thickness="6" />
-                            <Transform target="startAngle" value="152.5 + -35 * clamp(([STEP_GOAL] &gt; 0 ? [STEP_COUNT] / [STEP_GOAL] : 0), 0, 1)" />
-                        </Arc>
-                    </PartDraw>
-                </Default>
-            </Condition>
-            <Condition>
-                <Expressions>
-                    <Expression name="stepGoalMet">[STEP_GOAL] &gt; 0 &amp;&amp; [STEP_COUNT] &gt;= [STEP_GOAL]</Expression>
-                </Expressions>
-                <Compare expression="stepGoalMet">
-                    <PartText x="253" y="316" width="140" height="35">
-                        <Text align="CENTER" ellipsis="TRUE">
-                            <Font size="26.7" color="#3DDC57" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                <Template>%d<Parameter expression="[STEP_COUNT]" />
-                                </Template>
-                            </Font>
-                        </Text>
-                    </PartText>
-                </Compare>
-                <Default>
-                    <PartText x="253" y="316" width="140" height="35">
-                        <Text align="CENTER" ellipsis="TRUE">
-                            <Font size="26.7" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                <Template>%d<Parameter expression="[STEP_COUNT]" />
-                                </Template>
-                            </Font>
-                        </Text>
-                    </PartText>
-                </Default>
-            </Condition>
             <Condition>
                 <Expressions>
                     <Expression name="wxIcon">[WEATHER.IS_AVAILABLE]</Expression>
@@ -1302,6 +1232,231 @@
             </Complication>
             <Complication type="EMPTY">
                 <PartText x="-24" y="59" width="140" height="35">
+                    <Text align="CENTER" ellipsis="TRUE">
+                        <Font size="26.7" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                            <Template>--</Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+        </ComplicationSlot>
+        <ComplicationSlot x="250" y="250" width="159" height="159" slotId="4" displayName="slot_steps" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="FALSE">
+            <DefaultProviderPolicy defaultSystemProvider="STEP_COUNT" defaultSystemProviderType="SHORT_TEXT" primaryProvider="io.github.ls6777.datadial.stats/io.github.ls6777.datadial.stats.StepsSource" primaryProviderType="GOAL_PROGRESS" />
+            <BoundingBox x="0" y="0" width="159" height="159" />
+            <Variant mode="AMBIENT" target="alpha" value="0" />
+            <Complication type="SHORT_TEXT">
+                <Condition>
+                    <Expressions>
+                        <Expression name="icon3">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
+                        <Expression name="title3">[COMPLICATION.TITLE] != null</Expression>
+                    </Expressions>
+                    <Compare expression="icon3">
+                        <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                        </PartImage>
+                    </Compare>
+                    <Compare expression="title3">
+                        <PartText x="-12" y="22" width="95" height="26">
+                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
+                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
+                                    </Template>
+                                </Font>
+                            </Text>
+                        </PartText>
+                    </Compare>
+                </Condition>
+                <PartText x="21" y="66" width="104" height="35">
+                    <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
+                        <Font size="26.7" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                            <Template>%s<Parameter expression="[COMPLICATION.TEXT]" />
+                            </Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+            <Complication type="RANGED_VALUE">
+                <Condition>
+                    <Expressions>
+                        <Expression name="icon3">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
+                        <Expression name="title3">[COMPLICATION.TITLE] != null</Expression>
+                    </Expressions>
+                    <Compare expression="icon3">
+                        <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                        </PartImage>
+                    </Compare>
+                    <Compare expression="title3">
+                        <PartText x="-12" y="22" width="95" height="26">
+                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
+                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
+                                    </Template>
+                                </Font>
+                            </Text>
+                        </PartText>
+                    </Compare>
+                </Condition>
+                <Condition>
+                    <Expressions>
+                        <Expression name="track3">!([COMPLICATION.RANGED_VALUE_VALUE] &gt;= [COMPLICATION.RANGED_VALUE_MAX])</Expression>
+                    </Expressions>
+                    <Compare expression="track3">
+                        <PartDraw x="-250" y="-250" width="450" height="450">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="117.5" endAngle="152.5">
+                                <Stroke color="#333333" thickness="6" />
+                            </Arc>
+                        </PartDraw>
+                    </Compare>
+                </Condition>
+                <Condition>
+                    <Expressions>
+                        <Expression name="g3green">([COMPLICATION.RANGED_VALUE_VALUE] &gt;= [COMPLICATION.RANGED_VALUE_MAX]) || (100 * ([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN])) &gt;= 90</Expression>
+                        <Expression name="g3yellow">(100 * ([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN])) &gt;= 30</Expression>
+                    </Expressions>
+                    <Compare expression="g3green">
+                        <PartDraw x="-250" y="-250" width="450" height="450">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
+                                <Stroke color="#3DDC57" thickness="6" />
+                                <Transform target="startAngle" value="152.5 + -35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
+                            </Arc>
+                        </PartDraw>
+                    </Compare>
+                    <Compare expression="g3yellow">
+                        <PartDraw x="-250" y="-250" width="450" height="450">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
+                                <Stroke color="#FFD60A" thickness="6" />
+                                <Transform target="startAngle" value="152.5 + -35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
+                            </Arc>
+                        </PartDraw>
+                    </Compare>
+                    <Default>
+                        <PartDraw x="-250" y="-250" width="450" height="450">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
+                                <Stroke color="#FF3B30" thickness="6" />
+                                <Transform target="startAngle" value="152.5 + -35 * clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]), 0, 1)" />
+                            </Arc>
+                        </PartDraw>
+                    </Default>
+                </Condition>
+                <Condition>
+                    <Expressions>
+                        <Expression name="met3RANGED_VALUE">[COMPLICATION.RANGED_VALUE_VALUE] &gt;= [COMPLICATION.RANGED_VALUE_MAX]</Expression>
+                    </Expressions>
+                    <Compare expression="met3RANGED_VALUE">
+                        <PartText x="21" y="66" width="104" height="35">
+                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
+                                <Font size="26.7" color="#3DDC57" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                    <Template>%s<Parameter expression="[COMPLICATION.TEXT]" />
+                                    </Template>
+                                </Font>
+                            </Text>
+                        </PartText>
+                    </Compare>
+                    <Default>
+                        <PartText x="21" y="66" width="104" height="35">
+                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
+                                <Font size="26.7" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                    <Template>%s<Parameter expression="[COMPLICATION.TEXT]" />
+                                    </Template>
+                                </Font>
+                            </Text>
+                        </PartText>
+                    </Default>
+                </Condition>
+            </Complication>
+            <Complication type="GOAL_PROGRESS">
+                <Condition>
+                    <Expressions>
+                        <Expression name="icon3">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
+                        <Expression name="title3">[COMPLICATION.TITLE] != null</Expression>
+                    </Expressions>
+                    <Compare expression="icon3">
+                        <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                        </PartImage>
+                    </Compare>
+                    <Compare expression="title3">
+                        <PartText x="-12" y="22" width="95" height="26">
+                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
+                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
+                                    </Template>
+                                </Font>
+                            </Text>
+                        </PartText>
+                    </Compare>
+                </Condition>
+                <Condition>
+                    <Expressions>
+                        <Expression name="track3">!([COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]))</Expression>
+                    </Expressions>
+                    <Compare expression="track3">
+                        <PartDraw x="-250" y="-250" width="450" height="450">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="117.5" endAngle="152.5">
+                                <Stroke color="#333333" thickness="6" />
+                            </Arc>
+                        </PartDraw>
+                    </Compare>
+                </Condition>
+                <Condition>
+                    <Expressions>
+                        <Expression name="g3green">([COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])) || (100 * [COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])) &gt;= 90</Expression>
+                        <Expression name="g3yellow">(100 * [COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])) &gt;= 30</Expression>
+                    </Expressions>
+                    <Compare expression="g3green">
+                        <PartDraw x="-250" y="-250" width="450" height="450">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
+                                <Stroke color="#3DDC57" thickness="6" />
+                                <Transform target="startAngle" value="152.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]), 0, 1)" />
+                            </Arc>
+                        </PartDraw>
+                    </Compare>
+                    <Compare expression="g3yellow">
+                        <PartDraw x="-250" y="-250" width="450" height="450">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
+                                <Stroke color="#FFD60A" thickness="6" />
+                                <Transform target="startAngle" value="152.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]), 0, 1)" />
+                            </Arc>
+                        </PartDraw>
+                    </Compare>
+                    <Default>
+                        <PartDraw x="-250" y="-250" width="450" height="450">
+                            <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
+                                <Stroke color="#FF3B30" thickness="6" />
+                                <Transform target="startAngle" value="152.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]), 0, 1)" />
+                            </Arc>
+                        </PartDraw>
+                    </Default>
+                </Condition>
+                <Condition>
+                    <Expressions>
+                        <Expression name="met3GOAL_PROGRESS">[COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])</Expression>
+                    </Expressions>
+                    <Compare expression="met3GOAL_PROGRESS">
+                        <PartText x="21" y="66" width="104" height="35">
+                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
+                                <Font size="26.7" color="#3DDC57" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                    <Template>%s<Parameter expression="[COMPLICATION.TEXT]" />
+                                    </Template>
+                                </Font>
+                            </Text>
+                        </PartText>
+                    </Compare>
+                    <Default>
+                        <PartText x="21" y="66" width="104" height="35">
+                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
+                                <Font size="26.7" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
+                                    <Template>%s<Parameter expression="[COMPLICATION.TEXT]" />
+                                    </Template>
+                                </Font>
+                            </Text>
+                        </PartText>
+                    </Default>
+                </Condition>
+            </Complication>
+            <Complication type="EMPTY">
+                <PartText x="3" y="66" width="140" height="35">
                     <Text align="CENTER" ellipsis="TRUE">
                         <Font size="26.7" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
                             <Template>--</Template>

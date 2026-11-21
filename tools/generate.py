@@ -137,9 +137,11 @@ ACCENT = "[CONFIGURATION.accent.0]"
 HEART = "[CONFIGURATION.heart.0]"
 
 #: The companion app (stats/) with the data sources for the stats Watch Face
-#: Format can't read: calories, floors, elevation and battery time left.
+#: Format can't read the way DataDial shows them: Google Health's steps,
+#: calories and floors (from the phone app, phone/), and elevation.
 STATS_PACKAGE = "io.github.ls6777.datadial.stats"
 STATS_RES = ROOT / "stats" / "src" / "main" / "res"
+PHONE_RES = ROOT / "phone" / "src" / "main" / "res"
 
 
 def stats_source(name):
@@ -147,18 +149,26 @@ def stats_source(name):
     return f"{STATS_PACKAGE}/{STATS_PACKAGE}.{name}"
 
 
-#: Complication slots for DataDial's calories, floors and elevation: slot,
-#: id, display name string, default data source and type from DataDial Stats,
-#: and the system data source used when DataDial Stats isn't installed. Those
-#: are sources that always have data: a source with nothing to show (such as
-#: NEXT_EVENT with no calendar) sends NO_DATA, which Watch Face Format draws
-#: as nothing at all.
+#: Complication slots for DataDial's steps, calories, floors and elevation:
+#: slot, id, display name string, default data source and type from DataDial
+#: Stats, and the system data source used when DataDial Stats isn't
+#: installed. Those are sources that always have data: a source with nothing
+#: to show (such as NEXT_EVENT with no calendar) sends NO_DATA, which Watch
+#: Face Format draws as nothing at all. The steps slot comes last, so the
+#: older slots keep their place (the runtime matches saved choices by order).
 COMPLICATIONS = [
     (SLOT_BOTTOM, 1, "slot_bottom", "CaloriesSource", "SHORT_TEXT", "SUNRISE_SUNSET"),
     (SLOT_LOWER_LEFT, 2, "slot_lower_left", "FloorsSource", "GOAL_PROGRESS",
      "UNREAD_NOTIFICATION_COUNT"),
     (SLOT_LEFT, 3, "slot_left", "ElevationSource", "SHORT_TEXT", "WORLD_CLOCK"),
+    (SLOT_STEPS, 4, "slot_steps", "StepsSource", "GOAL_PROGRESS", "STEP_COUNT"),
 ]
+
+#: Slots that can't be changed in the editor, with the goal their gauge uses
+#: instead of the source's (an expression, used when it is above 0). Steps
+#: are always steps, against the watch's own step goal, which data sources
+#: can't read.
+FIXED_SLOTS = {SLOT_STEPS: "[STEP_GOAL]"}
 
 FONT = {"family": "SYNC_TO_DEVICE", "weight": "BOLD", "width": "CONDENSED"}
 #: Connect IQ font sizes are the full line height; Watch Face Format sizes
@@ -443,23 +453,6 @@ def uv_slot(parent):
     text(normal, x, y, 0.6 * R, size, "%d", [uv])
 
 
-def steps_slot(parent):
-    x, y = icon_position(SLOT_STEPS)
-    image(parent, x, y, ICON_SIZE, "ic_steps", tint=ACCENT, name="stepsIcon")
-    # The goal is documented as never below 1000, but reads 0 when the
-    # watch has no health data (as on the emulator): the gauge is then an
-    # empty track (no division by zero).
-    has_goal = "[STEP_GOAL] > 0"
-    met = f"{has_goal} && [STEP_COUNT] >= [STEP_GOAL]"
-    progress = f"({has_goal} ? [STEP_COUNT] / [STEP_GOAL] : 0)"
-    gauge(parent, SLOT_STEPS, progress, met, goal_colors("[STEP_PERCENT]", met))
-    x, y = value_position(SLOT_STEPS)
-    size = VALUE_SIZES[SLOT_STEPS] * R
-    goal, normal = condition(parent, [("stepGoalMet", met)])
-    text(goal, x, y, 0.62 * R, size, "%d", ["[STEP_COUNT]"], color=GOAL)
-    text(normal, x, y, 0.62 * R, size, "%d", ["[STEP_COUNT]"])
-
-
 def weather_slot(parent):
     """The current weather: an icon for the condition (day and night
     versions where it matters) and the temperature in the watch's unit, ice
@@ -518,13 +511,15 @@ def complication_slot(scene, slot, slot_id, display_name, source, source_type,
                       system_source):
     """A stat from a complication data source, drawn like DataDial's own:
     the source's icon (tinted) toward the center, or its title if it has no
-    icon; its text toward the edge; and a gauge for ranged and goal values."""
+    icon; its text toward the edge; and a gauge for ranged and goal values.
+    A slot in FIXED_SLOTS can't be changed and uses its goal for the gauge."""
     x0, y0, w, h = cell_bounds(slot)
     offset = (x0, y0)
+    fixed_goal = FIXED_SLOTS.get(slot)
     cs = el(scene, "ComplicationSlot", x=x0, y=y0, width=w, height=h,
             slotId=slot_id, displayName=display_name,
             supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY",
-            isCustomizable="TRUE")
+            isCustomizable="FALSE" if fixed_goal else "TRUE")
     el(cs, "DefaultProviderPolicy", defaultSystemProvider=system_source,
        defaultSystemProviderType="SHORT_TEXT", primaryProvider=stats_source(source),
        primaryProviderType=source_type)
@@ -556,6 +551,10 @@ def complication_slot(scene, slot, slot_id, display_name, source, source_type,
         elif ctype == "GOAL_PROGRESS":
             v, target = ("[COMPLICATION.GOAL_PROGRESS_VALUE]",
                          "[COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]")
+            if fixed_goal:
+                # The watch's goal reads 0 without health data (as on the
+                # emulator): the source's goal is used then.
+                target = f"({fixed_goal} > 0 ? {fixed_goal} : {target})"
             progress = f"{v} / {target}"
             met = f"{v} >= {target}"
             gauge(comp, slot, progress, met, goal_colors(f"(100 * {progress})", met),
@@ -588,7 +587,6 @@ def stats(scene):
     battery(group)
     heart_slot(group)
     uv_slot(group)
-    steps_slot(group)
     weather_slot(group)
 
 
@@ -1120,8 +1118,8 @@ def render_second_hand():
 
 def render_images():
     DRAWABLE.mkdir(parents=True, exist_ok=True)
-    for svg, name in (("heart", "ic_heart"), ("steps", "ic_steps"),
-                      ("thermometer", "ic_thermometer"), ("uv", "ic_uv")):
+    for svg, name in (("heart", "ic_heart"), ("thermometer", "ic_thermometer"),
+                      ("uv", "ic_uv")):
         render_icon(ART / f"{svg}.svg", DRAWABLE / f"{name}.png")
     for name, draw_fn in WEATHER_DRAWINGS.items():
         render_symbol(DRAWABLE / f"{name}.png", draw_fn)
@@ -1134,7 +1132,7 @@ def render_images():
 
 #: DataDial Stats' icons: drawable name and the art/ SVG it comes from. The
 #: data source icons are white (the watch face tints them).
-STATS_ICONS = [("ic_calories", "flame"), ("ic_floors", "floors"),
+STATS_ICONS = [("ic_steps", "steps"), ("ic_calories", "flame"), ("ic_floors", "floors"),
                ("ic_elevation", "mountain")]
 
 
@@ -1158,20 +1156,40 @@ def vector(paths, color="#FFFFFF", background=None, scale=1.0):
 
 
 def svg_path_data(svg_file):
-    """The (path data, fill rule) pairs of one of DataDial's icon SVGs."""
-    return [(e.get("d"), e.get("fill-rule", "nonzero"))
-            for e in ET.parse(svg_file).getroot().iter() if e.tag.split("}")[-1] == "path"]
+    """The (path data, fill rule) pairs of one of DataDial's icon SVGs: its
+    paths, and its ellipses, circles and rects as path data."""
+    shapes = []
+    for e in ET.parse(svg_file).getroot().iter():
+        tag = e.tag.split("}")[-1]
+        rule = e.get("fill-rule", "nonzero")
+        if tag == "path":
+            shapes.append((e.get("d"), rule))
+        elif tag in ("ellipse", "circle"):
+            cx, cy = float(e.get("cx")), float(e.get("cy"))
+            rx = float(e.get("rx", e.get("r", 0)))
+            ry = float(e.get("ry", e.get("r", 0)))
+            # Two half arcs from the left edge to the right and back.
+            shapes.append((f"M{fmt(cx - rx)} {fmt(cy)}A{fmt(rx)} {fmt(ry)} 0 1 0 {fmt(cx + rx)} "
+                           f"{fmt(cy)}A{fmt(rx)} {fmt(ry)} 0 1 0 {fmt(cx - rx)} {fmt(cy)}Z", rule))
+        elif tag == "rect":
+            x, y = float(e.get("x")), float(e.get("y"))
+            w, h = float(e.get("width")), float(e.get("height"))
+            shapes.append((f"M{fmt(x)} {fmt(y)}h{fmt(w)}v{fmt(h)}h{fmt(-w)}Z", rule))
+    return shapes
 
 
 def write_stats_icons():
-    out = STATS_RES / "drawable"
-    out.mkdir(parents=True, exist_ok=True)
-    icons = {name: vector(svg_path_data(ART / f"{svg}.svg")) for name, svg in STATS_ICONS}
+    """DataDial Stats' icons on the watch, and its app icon on the phone."""
     # App icon: the elevation mountain in DataDial's blue on black.
-    icons["ic_launcher"] = vector(svg_path_data(ART / "mountain.svg"), color=PALETTE[0][1],
-                                  background="#000000", scale=0.6)
-    for name, xml in icons.items():
-        (out / f"{name}.xml").write_text(xml, encoding="utf-8", newline="\n")
+    launcher = vector(svg_path_data(ART / "mountain.svg"), color=PALETTE[0][1],
+                      background="#000000", scale=0.6)
+    icons = {name: vector(svg_path_data(ART / f"{svg}.svg")) for name, svg in STATS_ICONS}
+    icons["ic_launcher"] = launcher
+    for res, files in ((STATS_RES, icons), (PHONE_RES, {"ic_launcher": launcher})):
+        out = res / "drawable"
+        out.mkdir(parents=True, exist_ok=True)
+        for name, xml in files.items():
+            (out / f"{name}.xml").write_text(xml, encoding="utf-8", newline="\n")
 
 
 #: The test build's time (hour, minute, second), also the picker preview's:
@@ -1189,9 +1207,7 @@ TEST_VALUES = {
     "[HOUR_0_23_Z]": f"{TEST_TIME[0]:02d}",
     "[MINUTE_Z]": f"{TEST_TIME[1]:02d}",
     "[SECOND_Z]": f"{TEST_TIME[2]:02d}",
-    "[STEP_COUNT]": "25000",
-    "[STEP_GOAL]": "41667",
-    "[STEP_PERCENT]": "60",
+    "[STEP_GOAL]": "41667",  # DataDial Stats' test steps (25,000) are 60% of it
     "[HEART_RATE]": "160",
     "[BATTERY_PERCENT]": "100",
     "[BATTERY_CHARGING_STATUS]": "(1 == 1)",

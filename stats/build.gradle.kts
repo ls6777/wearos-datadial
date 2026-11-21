@@ -3,8 +3,9 @@ plugins {
 }
 
 // DataDial Stats: complication data sources for the stats Watch Face Format
-// can't read (calories, floors, elevation, battery time left). A separate app,
-// because a Watch Face Format bundle can't contain code.
+// can't read the way DataDial shows them (Google Health's steps, calories and
+// floors from the phone app, and elevation). A separate app, because a Watch
+// Face Format bundle can't contain code.
 android {
     namespace = "io.github.ls6777.datadial.stats"
     compileSdk = 36
@@ -31,4 +32,6 @@ dependencies {
     implementation(libs.health.services.client)
     implementation(libs.concurrent.futures.ktx)
     implementation(libs.protolayout.expression)
+    implementation(project(":shared"))
+    implementation(libs.coroutines.play.services)
 }
