@@ -50,7 +50,11 @@ VALUE_SIZES = [0.165, 0.25, 0.25, 0.165, 0.21, 0.25, 0.165, 0.25]
 LABEL_SIZE = 0.12  # weekday and complication titles
 VALUE_RADIUS = 0.68  # value text center
 ICON_RADIUS = 0.38  # icon center
-WEEKDAY_RADIUS = 0.525
+#: The 12 o'clock cell, from the edge in: date, weekday, then the battery
+#: (see BATTERY_TEXT_RADIUS). Distances from the center as fractions of the
+#: radius.
+DATE_RADIUS = 0.80
+WEEKDAY_RADIUS = 0.675
 ICON_SIZE = round(0.075 * SIZE)  # 7.5% of the screen, as in DataDial
 STEPS_VALUE_SHIFT = 0.045  # steps value moves left to clear its gauge
 LINE_START = 0.30  # divider lines, analog
@@ -71,16 +75,14 @@ SECONDS_SIZE = 0.19
 SECONDS_Y = 0.18
 
 BATTERY_LOW = 20  # percent
-#: The battery in the middle of the face (percentage above the icon):
-#: percentage text size (DataDial's terms, see FONT_SCALE), icon size as a
-#: fraction of ICON_SIZE, space between the text and the icon, and the
-#: height of the pair's middle as a fraction of the radius from the center:
-#: above the hub in analog mode, above the time in digital mode.
-CENTER_BATTERY_SIZE = 0.13
-CENTER_BATTERY_ICON = 0.8
-CENTER_BATTERY_GAP = 4
-ANALOG_BATTERY_Y = -0.15
-DIGITAL_BATTERY_Y = -0.29
+#: The battery in the 12 o'clock cell, under the weekday: the percentage
+#: above the icon. Percentage text size (DataDial's terms, see FONT_SCALE,
+#: the same as the date), icon size as a fraction of ICON_SIZE, and the
+#: distance of each from the center as a fraction of the radius.
+BATTERY_TEXT_SIZE = 0.165
+BATTERY_ICON_SCALE = 1.0
+BATTERY_TEXT_RADIUS = 0.49
+BATTERY_ICON_RADIUS = 0.37
 #: Temperature thresholds, in each unit (DataDial's 40 F and 90 F). The
 #: weather temperature is a whole number, so "below 4.44 C" is "below 5" and
 #: "above 32.22 C" is "above 32".
@@ -362,7 +364,9 @@ def goal_colors(percent, met):
 
 
 def date_slot(parent):
-    x, y = value_position(SLOT_DATE)
+    """The date and weekday at the top of the 12 o'clock cell; the battery
+    is under them (battery)."""
+    x, y = polar(slot_angle(SLOT_DATE), R * DATE_RADIUS)
     text(parent, x, y, 0.75 * R, VALUE_SIZES[SLOT_DATE] * R, "%s %s",
          ["[DAY]", "[MONTH_S]"], upper=True, name="date")
     x, y = polar(slot_angle(SLOT_DATE), R * WEEKDAY_RADIUS)
@@ -380,22 +384,19 @@ def heart_slot(parent):
     text(none, x, y, 0.6 * R, size, "--", [])
 
 
-def battery(parent, y, name):
-    """The battery in the middle of the face: the percentage above a small
-    outline filled to the charge level, the pair centered on the dial with
-    its middle at height y. Red below BATTERY_LOW, with a green bolt over
-    the outline while charging. Hidden in always-on mode."""
+def battery(parent):
+    """The battery in the 12 o'clock cell, under the date and weekday: the
+    percentage above an outline filled to the charge level. Red below
+    BATTERY_LOW, with a green bolt over the outline while charging."""
+    name = "battery"
     group = el(parent, "Group", name=name, x=0, y=0, width=SIZE, height=SIZE)
-    ambient_hide(group)
-    size = round(ICON_SIZE * CENTER_BATTERY_ICON)
+    size = round(ICON_SIZE * BATTERY_ICON_SCALE)
     pen = max(size // 14, 2)
     body_w, body_h, tip_w = round(size * 0.80), round(size * 0.48), round(size * 0.08)
-    text_size = CENTER_BATTERY_SIZE * R
+    text_size = BATTERY_TEXT_SIZE * R
     text_w = math.ceil(text_size * FONT_SCALE * 3.0)  # room for "100%"
-    # Distance between the centers of the text and the icon.
-    step = text_size * FONT_SCALE * 0.6 + body_h / 2 + CENTER_BATTERY_GAP
-    text_y = y - step / 2
-    icon_y = y + step / 2
+    text_y = C - R * BATTERY_TEXT_RADIUS
+    icon_y = C - R * BATTERY_ICON_RADIUS
     left = round(C - (body_w + tip_w) / 2)
     top = round(icon_y - body_h / 2)
     inset = pen + 2
@@ -584,30 +585,44 @@ def stats(scene):
     group = el(scene, "Group", name="stats", x=0, y=0, width=SIZE, height=SIZE)
     ambient_hide(group)
     date_slot(group)
+    battery(group)
     heart_slot(group)
     uv_slot(group)
     steps_slot(group)
     weather_slot(group)
 
 
-def hand_parts(clock, kind, resource, tint=None):
-    """One hand image, its pivot at the dial center (see render_hand)."""
+def hand_parts(clock, kind, resource, tint=None, angle=None):
+    """One hand image, its pivot at the dial center (see render_hand). With
+    an angle, a still image at that angle instead of a moving hand."""
     w, top, bottom = HAND_IMAGES[resource]
-    hand = el(clock, kind, resource=resource, x=round(C - w / 2), y=round(C - top),
-              width=w, height=top + bottom, pivotX=0.5, pivotY=top / (top + bottom))
+    box = dict(x=round(C - w / 2), y=round(C - top), width=w, height=top + bottom,
+               pivotX=0.5, pivotY=top / (top + bottom))
+    if angle is None:
+        hand = el(clock, kind, resource=resource, **box)
+    else:
+        hand = el(clock, "PartImage", angle=float(angle), **box)
+        el(hand, "Image", resource=resource)
     if tint:
         hand.set("tintColor", tint)
     return hand
 
 
-def analog_clock(parent):
+def analog_clock(parent, frozen=None):
     """Steel skeleton hands and a red seconds hand while awake; flat gray
-    hands in always-on mode."""
-    clock = el(parent, "AnalogClock", x=0, y=0, width=SIZE, height=SIZE, name="hands")
+    hands in always-on mode. frozen is an (hour, minute, second) to draw
+    the awake hands at instead of the time, for the test build."""
+    if frozen is None:
+        clock = el(parent, "AnalogClock", x=0, y=0, width=SIZE, height=SIZE, name="hands")
+        angles = (None, None, None)
+    else:
+        clock = el(parent, "Group", x=0, y=0, width=SIZE, height=SIZE, name="hands")
+        h, m, s = frozen
+        angles = ((h % 12) * 30 + m / 2 + s / 120, m * 6 + s / 10, s * 6)
     ambient_hide(clock)
-    hand_parts(clock, "HourHand", "hand_hour")
-    hand_parts(clock, "MinuteHand", "hand_minute")
-    hand_parts(clock, "SecondHand", "hand_second")
+    for kind, resource, angle in zip(("HourHand", "MinuteHand", "SecondHand"),
+                                     ("hand_hour", "hand_minute", "hand_second"), angles):
+        hand_parts(clock, kind, resource, angle=angle)
 
     sleep = el(parent, "AnalogClock", x=0, y=0, width=SIZE, height=SIZE,
                name="sleepHands", alpha=0)
@@ -650,15 +665,12 @@ def digital_clock(parent):
 
 
 def clock(scene):
-    """Divider lines, the battery and the time, by the clock style
-    setting."""
+    """Divider lines and the time, by the clock style setting."""
     config = el(scene, "ListConfiguration", id="clockStyle")
     analog = el(config, "ListOption", id="0")
     divider_lines(analog, LINE_START)
-    battery(analog, C + R * ANALOG_BATTERY_Y, "battery")
     digital = el(config, "ListOption", id="1")
     divider_lines(digital, DIGITAL_LINE_START)
-    battery(digital, C + R * DIGITAL_BATTERY_Y, "batteryDigital")
     digital_clock(digital)
     return analog
 
@@ -677,12 +689,13 @@ def user_configurations(face):
             el(cc, "ColorOption", id=str(i), displayName=label, colors=color)
 
 
-def watch_face():
+def watch_face(test=False):
     face = ET.Element("WatchFace", width=str(SIZE), height=str(SIZE))
     el(face, "Metadata", key="CLOCK_TYPE", value="ANALOG")
     # The picker preview's time: the hands lie along divider lines, clear of
-    # the stats (the same time as DataDial's test build).
-    el(face, "Metadata", key="PREVIEW_TIME", value="12:41:26")
+    # the stats (the same time as the test build).
+    h, m, s = TEST_TIME
+    el(face, "Metadata", key="PREVIEW_TIME", value=f"{h:02d}:{m:02d}:{s:02d}")
     user_configurations(face)
     scene = el(face, "Scene", backgroundColor="#000000")
     dial(scene)
@@ -692,7 +705,7 @@ def watch_face():
     # The clock is drawn last, over the stats. Analog hands go in the
     # analog option of the clock style setting.
     analog = clock(scene)
-    analog_clock(analog)
+    analog_clock(analog, frozen=TEST_TIME if test else None)
     return face
 
 
@@ -1161,10 +1174,21 @@ def write_stats_icons():
         (out / f"{name}.xml").write_text(xml, encoding="utf-8", newline="\n")
 
 
+#: The test build's time (hour, minute, second), also the picker preview's:
+#: all three hands lie along divider lines, clear of the stats and of the
+#: battery above the center.
+TEST_TIME = (8, 19, 11)
+
 #: Fixed worst-case values for the test build (--test), to check the layout:
 #: the widest values, a goal gauge part way (yellow) and charging. DataDial
 #: Stats has its own test values for its stats (build.sh test turns them on).
+#: The digital time shows TEST_TIME (the analog hands are frozen at it in
+#: watch_face).
 TEST_VALUES = {
+    "[HOUR_1_12]": str(TEST_TIME[0]),
+    "[HOUR_0_23_Z]": f"{TEST_TIME[0]:02d}",
+    "[MINUTE_Z]": f"{TEST_TIME[1]:02d}",
+    "[SECOND_Z]": f"{TEST_TIME[2]:02d}",
     "[STEP_COUNT]": "25000",
     "[STEP_GOAL]": "41667",
     "[STEP_PERCENT]": "60",
@@ -1183,7 +1207,7 @@ TEST_VALUES = {
 
 
 def write_xml(test=False):
-    face = watch_face()
+    face = watch_face(test)
     ET.indent(face, space="    ")
     out = RES / "raw" / "watchface.xml"
     out.parent.mkdir(parents=True, exist_ok=True)

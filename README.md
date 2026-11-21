@@ -15,24 +15,24 @@ watch.
 ![DataDial on the Wear OS 7 emulator, analog and digital](docs/screenshot.png)
 
 *Test build (`./build.sh test`) on the Wear OS 7 emulator: analog with the default blue
-(left) and digital with the green accent (right). The test build shows the same fixed values
-as the Garmin test build: 25,000 steps (60% of the goal), heart rate 160, 100% battery while
-charging, sunny and 110 °F (hot, high 112 °F, low 95 °F), 3,500 calories, 110 floors (goal met) and 13,000 ft, plus UV index 11
-(extreme).*
+(left) and digital with the green accent (right), at the test build's fixed time of 8:19:11,
+which keeps the hands clear of the stats. The test build shows the same fixed values as the
+Garmin test build: 25,000 steps (60% of the goal), heart rate 160, 100% battery while
+charging, sunny and 110 °F (hot; high 112 °F, low 95 °F), 3,500 calories, 110 floors (goal
+met) and 13,000 ft, plus UV index 11 (extreme).*
 
 ## The face
 
 Same layout as the Garmin version: a dot for every minute around the edge, eight stats
 divided by colored lines, each with an icon toward the center and a white value toward the
 edge, see-through steel hands with a red seconds hand, or a digital time with seconds below.
-The battery moves to the middle, its percentage above its icon: above the center of the hands,
-or above the digital time.
+The battery moves into the 12 o'clock section, under the date.
 
 | Section | Garmin DataDial | Wear OS DataDial |
 |---|---|---|
-| 12 o'clock | Date, weekday | Same |
+| 12 o'clock | Date, weekday | Same, plus the battery % under them |
 | 1:30 | Heart rate | Same |
-| 3 o'clock | Battery %, days left | **UV index** from the weather; the battery % is in the middle |
+| 3 o'clock | Battery %, days left | **UV index** from the weather; the battery % is at 12 o'clock |
 | 4:30 | Steps, with goal gauge | Same |
 | 6 o'clock | Calories | Same, from DataDial Stats |
 | 7:30 | Floors, with goal gauge | Same, from DataDial Stats (goal: 10 floors) |
@@ -41,8 +41,9 @@ or above the digital time.
 
 ### DataDial Stats
 
-A Watch Face Format face is XML with no code, and it can only read steps and heart rate: it
-has no calories, floors or elevation (checked against Watch Face Format version 5).
+A Watch Face Format face is XML with no code. Of the health stats it can only read steps and
+heart rate (besides the battery and the weather): it has no calories, floors or elevation
+(checked against Watch Face Format version 5).
 DataDial Stats reads them and hands them to the face as
 [complications](https://developer.android.com/training/wearables/wff/complications), which
 DataDial uses by default:
@@ -81,8 +82,8 @@ values). A source with no data at the moment shows nothing; with no source chose
 section shows `--`. Without DataDial Stats installed, they default to sunrise/sunset, unread
 notifications and a world clock.
 
-- **Battery:** the percentage above a small outline filled to the charge level; below 20%
-  both turn red. A green bolt appears over the outline while charging.
+- **Battery:** under the date and weekday, the percentage above an outline filled to the
+  charge level; below 20% both turn red. A green bolt appears over the outline while charging.
 - **UV index:** the current UV index from the watch's weather, in WHO risk colors from high
   up: orange from 6, red from 8, purple from 11 (white below 6). Without weather data it
   shows `--`.
@@ -119,8 +120,8 @@ Purple, White and Gray. The digital time follows the watch's 12/24-hour setting.
 
 Watch Face Format is declarative XML with no code. DataDial's layout is computed from the
 screen radius, so `tools/generate.py` writes the XML from the same proportions as the Garmin
-version, and renders the images (icons from `art/`, the steel hands, the bolt, snowflake and
-heat waves) with Pillow. It also writes DataDial Stats' icons from the same `art/` files.
+version, and renders the images (icons from `art/`, the steel hands, the bolt and the
+weather icons) with Pillow. It also writes DataDial Stats' icons from the same `art/` files.
 Edit the script, not the generated files.
 
 DataDial Stats (`stats/`) is a separate Kotlin app, because a Watch Face Format bundle can't
@@ -136,7 +137,7 @@ contain code.
 | `watchface/src/main/res/xml/watch_face_info.xml` | Preview image and picker settings |
 | `watchface/src/main/res/values/strings.xml` | Names shown in the editor |
 | `watchface/src/main/res/drawable/preview.png` | Picker and store preview (an emulator capture of the test build) |
-| `stats/src/main/kotlin/.../Sources.kt` | DataDial Stats' four complication data sources |
+| `stats/src/main/kotlin/.../Sources.kt` | DataDial Stats' three complication data sources |
 | `stats/src/main/kotlin/.../Health.kt` | Daily calories and floors from Health Services |
 | `stats/src/main/kotlin/.../Elevation.kt` | Barometric elevation and its calibration |
 | `stats/src/main/kotlin/.../Sensors.kt` | One-shot sensor readings |
