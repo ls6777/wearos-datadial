@@ -50,7 +50,9 @@ app. So steps, calories and floors are
 [complications](https://developer.android.com/training/wearables/wff/complications) from the
 Google Health app on the watch (its package is still `com.fitbit.FitbitMobile`): today's
 totals as Google Health counts them, with its step and floor goals for the gauges. Calories
-include resting calories, as on Garmin.
+include resting calories, as on Garmin. Google Health's icons have their own colors, which
+the face can't turn into the accent color, so these sections show DataDial's own icons
+instead, and they can't be switched to other sources.
 
 They come from Google Health only, with no fallback: if Google Health is missing or disabled
 on the watch, the three sections show `--`. (It can be disabled by accident in the watch's
@@ -80,13 +82,12 @@ After installing, open DataDial Stats once and tap **Allow access**: it needs ph
 activity (for the Health Services wake-ups) and, optionally, location (to calibrate the
 elevation). The app's screen shows the elevation and when it was last calibrated.
 
-The 6, 7:30 and 9 o'clock sections can show other stats: long-press the face, tap the edit
-button, and pick any other data source an app on the watch provides (steps always shows
-steps). They're drawn in DataDial's style: the source's icon in the accent color (Google
-Health's icons keep their own colors), its value in white, and the goal gauge along the edge
-for sources that report progress toward a target (ranged or goal values). A source with no
-data at the moment shows nothing; with no source chosen, the section shows `--`. Without
-DataDial Stats installed, the elevation section shows a world clock.
+The 9 o'clock section can show another stat: long-press the face, tap the edit button, and
+pick any other data source an app on the watch provides. It's drawn in DataDial's style: the
+source's icon in the accent color, its value in white, and the goal gauge along the edge for
+sources that report progress toward a target (ranged or goal values). A source with no data
+at the moment shows nothing; with no source chosen, the section shows `--`. Without DataDial
+Stats installed, it shows a world clock.
 
 - **Battery:** under the date and weekday, the percentage above an outline filled to the
   charge level; below 20% both turn red. A green bolt appears over the outline while charging.
@@ -117,7 +118,7 @@ app on the phone):
 | Clock style | Analog (hands) or Digital (time in the middle) | Analog |
 | Lines and icons color | Divider lines, icons and the battery outline | Blue |
 | Heart rate icon color | Heart icon only | Red |
-| Complications | The 6, 7:30 and 9 o'clock stats | Calories, floors, elevation |
+| Complication | The 9 o'clock stat | Elevation |
 
 The colors are the same ten as on Garmin: Blue, Cyan, Green, Yellow, Orange, Red, Pink,
 Purple, White and Gray. The digital time follows the watch's 12/24-hour setting.

@@ -174,8 +174,11 @@ COMPLICATIONS = [
     (SLOT_STEPS, 4, "slot_steps", GOOGLE_HEALTH_STEPS, "GOAL_PROGRESS", "EMPTY"),
 ]
 
-#: Slots that can't be changed in the editor: steps are always steps.
-FIXED_SLOTS = {SLOT_STEPS}
+#: Slots that can't be changed in the editor, with DataDial's own icon for
+#: each (the image drawn from art/). Google Health's icons have their own
+#: colors, which tinting can't turn into the accent color, so these show
+#: DataDial's white icons, tinted like the other stats.
+FIXED_SLOTS = {SLOT_STEPS: "ic_steps", SLOT_BOTTOM: "ic_calories", SLOT_LOWER_LEFT: "ic_floors"}
 
 FONT = {"family": "SYNC_TO_DEVICE", "weight": "BOLD", "width": "CONDENSED"}
 #: Connect IQ font sizes are the full line height; Watch Face Format sizes
@@ -514,18 +517,29 @@ def cell_bounds(slot):
     return x0, y0, math.ceil(max(xs)) - x0, math.ceil(max(ys)) - y0
 
 
+def source_icon(comp, slot, x, y, offset):
+    """A complication's own icon, tinted, or its title if it has no icon."""
+    icon, title = condition(comp, [
+        (f"icon{slot}", "[COMPLICATION.MONOCHROMATIC_IMAGE] != null"),
+        (f"title{slot}", "[COMPLICATION.TITLE] != null")], default=False)
+    image(icon, x, y, ICON_SIZE, "[COMPLICATION.MONOCHROMATIC_IMAGE]", tint=ACCENT, offset=offset)
+    text(title, x, y, 0.42 * R, LABEL_SIZE * R, "%s", ["[COMPLICATION.TITLE]"],
+         color=ACCENT, auto_size=True, offset=offset)
+
+
 def complication_slot(scene, slot, slot_id, display_name, source, source_type,
                       system_source):
     """A stat from a complication data source, drawn like DataDial's own:
     the source's icon (tinted) toward the center, or its title if it has no
     icon; its text toward the edge; and a gauge for ranged and goal values.
-    A slot in FIXED_SLOTS can't be changed."""
+    A slot in FIXED_SLOTS can't be changed and shows DataDial's own icon."""
     x0, y0, w, h = cell_bounds(slot)
     offset = (x0, y0)
+    own_icon = FIXED_SLOTS.get(slot)
     cs = el(scene, "ComplicationSlot", x=x0, y=y0, width=w, height=h,
             slotId=slot_id, displayName=display_name,
             supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY",
-            isCustomizable="FALSE" if slot in FIXED_SLOTS else "TRUE")
+            isCustomizable="FALSE" if own_icon else "TRUE")
     el(cs, "DefaultProviderPolicy", defaultSystemProvider=system_source,
        defaultSystemProviderType="EMPTY" if system_source == "EMPTY" else "SHORT_TEXT",
        primaryProvider=source, primaryProviderType=source_type)
@@ -538,13 +552,10 @@ def complication_slot(scene, slot, slot_id, display_name, source, source_type,
 
     for ctype in ("SHORT_TEXT", "RANGED_VALUE", "GOAL_PROGRESS"):
         comp = el(cs, "Complication", type=ctype)
-        icon, title = condition(comp, [
-            (f"icon{slot}", "[COMPLICATION.MONOCHROMATIC_IMAGE] != null"),
-            (f"title{slot}", "[COMPLICATION.TITLE] != null")], default=False)
-        image(icon, ix, iy, ICON_SIZE, "[COMPLICATION.MONOCHROMATIC_IMAGE]",
-              tint=ACCENT, offset=offset)
-        text(title, ix, iy, 0.42 * R, LABEL_SIZE * R, "%s", ["[COMPLICATION.TITLE]"],
-             color=ACCENT, auto_size=True, offset=offset)
+        if own_icon:
+            image(comp, ix, iy, ICON_SIZE, own_icon, tint=ACCENT, offset=offset)
+        else:
+            source_icon(comp, slot, ix, iy, offset)
 
         met = None
         if ctype == "RANGED_VALUE":
@@ -578,6 +589,8 @@ def complication_slot(scene, slot, slot_id, display_name, source, source_type,
     # No source chosen, or the source has no data: "--", as DataDial shows
     # for a value that isn't available.
     empty = el(cs, "Complication", type="EMPTY")
+    if own_icon:
+        image(empty, ix, iy, ICON_SIZE, own_icon, tint=ACCENT, offset=offset)
     text(empty, vx, vy, 0.62 * R, size, "--", [], offset=offset)
 
 
@@ -1120,8 +1133,8 @@ def render_second_hand():
 
 def render_images():
     DRAWABLE.mkdir(parents=True, exist_ok=True)
-    for svg, name in (("heart", "ic_heart"), ("thermometer", "ic_thermometer"),
-                      ("uv", "ic_uv")):
+    for svg, name in (("heart", "ic_heart"), ("steps", "ic_steps"), ("flame", "ic_calories"),
+                      ("floors", "ic_floors"), ("thermometer", "ic_thermometer"), ("uv", "ic_uv")):
         render_icon(ART / f"{svg}.svg", DRAWABLE / f"{name}.png")
     for name, draw_fn in WEATHER_DRAWINGS.items():
         render_symbol(DRAWABLE / f"{name}.png", draw_fn)

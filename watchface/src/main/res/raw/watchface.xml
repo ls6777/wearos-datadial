@@ -565,32 +565,14 @@
                 </Compare>
             </Condition>
         </Group>
-        <ComplicationSlot x="149" y="287" width="152" height="137" slotId="1" displayName="slot_bottom" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="TRUE">
+        <ComplicationSlot x="149" y="287" width="152" height="137" slotId="1" displayName="slot_bottom" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="FALSE">
             <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" primaryProvider="com.fitbit.FitbitMobile/com.google.android.wearable.fitbit.mainapp.complications.offloadable.calories.OffloadableCaloriesComplicationDataSourceService" primaryProviderType="SHORT_TEXT" />
             <BoundingBox x="0" y="0" width="152" height="137" />
             <Variant mode="AMBIENT" target="alpha" value="0" />
             <Complication type="SHORT_TEXT">
-                <Condition>
-                    <Expressions>
-                        <Expression name="icon4">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
-                        <Expression name="title4">[COMPLICATION.TITLE] != null</Expression>
-                    </Expressions>
-                    <Compare expression="icon4">
-                        <PartImage x="59" y="6" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
-                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
-                        </PartImage>
-                    </Compare>
-                    <Compare expression="title4">
-                        <PartText x="28" y="10" width="95" height="26">
-                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
-                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
-                                    </Template>
-                                </Font>
-                            </Text>
-                        </PartText>
-                    </Compare>
-                </Condition>
+                <PartImage x="59" y="6" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_calories" />
+                </PartImage>
                 <PartText x="24" y="68" width="104" height="45">
                     <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
                         <Font size="34" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
@@ -601,27 +583,9 @@
                 </PartText>
             </Complication>
             <Complication type="RANGED_VALUE">
-                <Condition>
-                    <Expressions>
-                        <Expression name="icon4">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
-                        <Expression name="title4">[COMPLICATION.TITLE] != null</Expression>
-                    </Expressions>
-                    <Compare expression="icon4">
-                        <PartImage x="59" y="6" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
-                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
-                        </PartImage>
-                    </Compare>
-                    <Compare expression="title4">
-                        <PartText x="28" y="10" width="95" height="26">
-                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
-                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
-                                    </Template>
-                                </Font>
-                            </Text>
-                        </PartText>
-                    </Compare>
-                </Condition>
+                <PartImage x="59" y="6" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_calories" />
+                </PartImage>
                 <Condition>
                     <Expressions>
                         <Expression name="track4">!([COMPLICATION.RANGED_VALUE_VALUE] &gt;= [COMPLICATION.RANGED_VALUE_MAX])</Expression>
@@ -691,27 +655,9 @@
                 </Condition>
             </Complication>
             <Complication type="GOAL_PROGRESS">
-                <Condition>
-                    <Expressions>
-                        <Expression name="icon4">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
-                        <Expression name="title4">[COMPLICATION.TITLE] != null</Expression>
-                    </Expressions>
-                    <Compare expression="icon4">
-                        <PartImage x="59" y="6" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
-                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
-                        </PartImage>
-                    </Compare>
-                    <Compare expression="title4">
-                        <PartText x="28" y="10" width="95" height="26">
-                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
-                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
-                                    </Template>
-                                </Font>
-                            </Text>
-                        </PartText>
-                    </Compare>
-                </Condition>
+                <PartImage x="59" y="6" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_calories" />
+                </PartImage>
                 <Condition>
                     <Expressions>
                         <Expression name="track4">!([COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])</Expression>
@@ -781,6 +727,9 @@
                 </Condition>
             </Complication>
             <Complication type="EMPTY">
+                <PartImage x="59" y="6" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_calories" />
+                </PartImage>
                 <PartText x="6" y="68" width="140" height="45">
                     <Text align="CENTER" ellipsis="TRUE">
                         <Font size="34" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
@@ -790,32 +739,14 @@
                 </PartText>
             </Complication>
         </ComplicationSlot>
-        <ComplicationSlot x="41" y="250" width="159" height="159" slotId="2" displayName="slot_lower_left" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="TRUE">
+        <ComplicationSlot x="41" y="250" width="159" height="159" slotId="2" displayName="slot_lower_left" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="FALSE">
             <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" primaryProvider="com.fitbit.FitbitMobile/com.google.android.wearable.fitbit.mainapp.complications.offloadable.floors.OffloadableFloorsComplicationDataSourceService" primaryProviderType="GOAL_PROGRESS" />
             <BoundingBox x="0" y="0" width="159" height="159" />
             <Variant mode="AMBIENT" target="alpha" value="0" />
             <Complication type="SHORT_TEXT">
-                <Condition>
-                    <Expressions>
-                        <Expression name="icon5">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
-                        <Expression name="title5">[COMPLICATION.TITLE] != null</Expression>
-                    </Expressions>
-                    <Compare expression="icon5">
-                        <PartImage x="107" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
-                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
-                        </PartImage>
-                    </Compare>
-                    <Compare expression="title5">
-                        <PartText x="76" y="22" width="95" height="26">
-                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
-                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
-                                    </Template>
-                                </Font>
-                            </Text>
-                        </PartText>
-                    </Compare>
-                </Condition>
+                <PartImage x="107" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_floors" />
+                </PartImage>
                 <PartText x="24" y="57" width="104" height="53">
                     <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
                         <Font size="40.5" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
@@ -826,27 +757,9 @@
                 </PartText>
             </Complication>
             <Complication type="RANGED_VALUE">
-                <Condition>
-                    <Expressions>
-                        <Expression name="icon5">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
-                        <Expression name="title5">[COMPLICATION.TITLE] != null</Expression>
-                    </Expressions>
-                    <Compare expression="icon5">
-                        <PartImage x="107" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
-                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
-                        </PartImage>
-                    </Compare>
-                    <Compare expression="title5">
-                        <PartText x="76" y="22" width="95" height="26">
-                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
-                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
-                                    </Template>
-                                </Font>
-                            </Text>
-                        </PartText>
-                    </Compare>
-                </Condition>
+                <PartImage x="107" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_floors" />
+                </PartImage>
                 <Condition>
                     <Expressions>
                         <Expression name="track5">!([COMPLICATION.RANGED_VALUE_VALUE] &gt;= [COMPLICATION.RANGED_VALUE_MAX])</Expression>
@@ -916,27 +829,9 @@
                 </Condition>
             </Complication>
             <Complication type="GOAL_PROGRESS">
-                <Condition>
-                    <Expressions>
-                        <Expression name="icon5">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
-                        <Expression name="title5">[COMPLICATION.TITLE] != null</Expression>
-                    </Expressions>
-                    <Compare expression="icon5">
-                        <PartImage x="107" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
-                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
-                        </PartImage>
-                    </Compare>
-                    <Compare expression="title5">
-                        <PartText x="76" y="22" width="95" height="26">
-                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
-                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
-                                    </Template>
-                                </Font>
-                            </Text>
-                        </PartText>
-                    </Compare>
-                </Condition>
+                <PartImage x="107" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_floors" />
+                </PartImage>
                 <Condition>
                     <Expressions>
                         <Expression name="track5">!([COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])</Expression>
@@ -1006,6 +901,9 @@
                 </Condition>
             </Complication>
             <Complication type="EMPTY">
+                <PartImage x="107" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_floors" />
+                </PartImage>
                 <PartText x="6" y="57" width="140" height="53">
                     <Text align="CENTER" ellipsis="TRUE">
                         <Font size="40.5" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
@@ -1245,27 +1143,9 @@
             <BoundingBox x="0" y="0" width="159" height="159" />
             <Variant mode="AMBIENT" target="alpha" value="0" />
             <Complication type="SHORT_TEXT">
-                <Condition>
-                    <Expressions>
-                        <Expression name="icon3">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
-                        <Expression name="title3">[COMPLICATION.TITLE] != null</Expression>
-                    </Expressions>
-                    <Compare expression="icon3">
-                        <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
-                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
-                        </PartImage>
-                    </Compare>
-                    <Compare expression="title3">
-                        <PartText x="-12" y="22" width="95" height="26">
-                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
-                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
-                                    </Template>
-                                </Font>
-                            </Text>
-                        </PartText>
-                    </Compare>
-                </Condition>
+                <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_steps" />
+                </PartImage>
                 <PartText x="21" y="66" width="104" height="35">
                     <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
                         <Font size="26.7" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
@@ -1276,27 +1156,9 @@
                 </PartText>
             </Complication>
             <Complication type="RANGED_VALUE">
-                <Condition>
-                    <Expressions>
-                        <Expression name="icon3">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
-                        <Expression name="title3">[COMPLICATION.TITLE] != null</Expression>
-                    </Expressions>
-                    <Compare expression="icon3">
-                        <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
-                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
-                        </PartImage>
-                    </Compare>
-                    <Compare expression="title3">
-                        <PartText x="-12" y="22" width="95" height="26">
-                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
-                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
-                                    </Template>
-                                </Font>
-                            </Text>
-                        </PartText>
-                    </Compare>
-                </Condition>
+                <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_steps" />
+                </PartImage>
                 <Condition>
                     <Expressions>
                         <Expression name="track3">!([COMPLICATION.RANGED_VALUE_VALUE] &gt;= [COMPLICATION.RANGED_VALUE_MAX])</Expression>
@@ -1366,27 +1228,9 @@
                 </Condition>
             </Complication>
             <Complication type="GOAL_PROGRESS">
-                <Condition>
-                    <Expressions>
-                        <Expression name="icon3">[COMPLICATION.MONOCHROMATIC_IMAGE] != null</Expression>
-                        <Expression name="title3">[COMPLICATION.TITLE] != null</Expression>
-                    </Expressions>
-                    <Compare expression="icon3">
-                        <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
-                            <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
-                        </PartImage>
-                    </Compare>
-                    <Compare expression="title3">
-                        <PartText x="-12" y="22" width="95" height="26">
-                            <Text align="CENTER" ellipsis="TRUE" isAutoSize="TRUE">
-                                <Font size="19.4" color="[CONFIGURATION.accent.0]" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
-                                    <Template>%s<Parameter expression="[COMPLICATION.TITLE]" />
-                                    </Template>
-                                </Font>
-                            </Text>
-                        </PartText>
-                    </Compare>
-                </Condition>
+                <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_steps" />
+                </PartImage>
                 <Condition>
                     <Expressions>
                         <Expression name="track3">!([COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])</Expression>
@@ -1456,6 +1300,9 @@
                 </Condition>
             </Complication>
             <Complication type="EMPTY">
+                <PartImage x="18" y="18" width="34" height="34" tintColor="[CONFIGURATION.accent.0]">
+                    <Image resource="ic_steps" />
+                </PartImage>
                 <PartText x="3" y="66" width="140" height="35">
                     <Text align="CENTER" ellipsis="TRUE">
                         <Font size="26.7" color="#FFFFFF" family="SYNC_TO_DEVICE" weight="BOLD" width="CONDENSED">
