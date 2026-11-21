@@ -136,12 +136,10 @@ DEFAULT_HEART = 5  # red
 ACCENT = "[CONFIGURATION.accent.0]"
 HEART = "[CONFIGURATION.heart.0]"
 
-#: The companion app (stats/) with the data sources for the stats Watch Face
-#: Format can't read the way DataDial shows them: Google Health's steps,
-#: calories and floors (from the phone app, phone/), and elevation.
+#: The companion app (stats/) with the data source for the stat Watch Face
+#: Format can't read: elevation.
 STATS_PACKAGE = "io.github.ls6777.datadial.stats"
 STATS_RES = ROOT / "stats" / "src" / "main" / "res"
-PHONE_RES = ROOT / "phone" / "src" / "main" / "res"
 
 
 def stats_source(name):
@@ -149,26 +147,35 @@ def stats_source(name):
     return f"{STATS_PACKAGE}/{STATS_PACKAGE}.{name}"
 
 
+#: Google Health's data sources on the watch (its package is still
+#: com.fitbit.FitbitMobile): the same numbers as the Google Health app, with
+#: its goals.
+GOOGLE_HEALTH = "com.fitbit.FitbitMobile/com.google.android.wearable.fitbit.mainapp.complications.offloadable"
+GOOGLE_HEALTH_STEPS = ("com.fitbit.FitbitMobile/"
+                       "com.fitbit.complications.offloadable.steps.OffloadableStepsComplicationDataSourceService")
+
 #: Complication slots for DataDial's steps, calories, floors and elevation:
-#: slot, id, display name string, default data source and type from DataDial
-#: Stats, and the system data source used when DataDial Stats isn't
-#: installed. Those are sources that always have data: a source with nothing
-#: to show (such as NEXT_EVENT with no calendar) sends NO_DATA, which Watch
-#: Face Format draws as nothing at all. The steps slot comes last, so the
-#: older slots keep their place (the runtime matches saved choices by order).
+#: slot, id, display name string, default data source and type, and the
+#: system data source used when that one isn't installed. Steps, calories
+#: and floors come from Google Health only (EMPTY: no other source, the slot
+#: shows "--" without it). Elevation comes from DataDial Stats, or a world
+#: clock without it (a source that always has data: one with nothing to
+#: show, such as NEXT_EVENT with no calendar, sends NO_DATA, which Watch Face
+#: Format draws as nothing at all). The steps slot comes last, so the older
+#: slots keep their place (the runtime matches saved choices by order).
 COMPLICATIONS = [
-    (SLOT_BOTTOM, 1, "slot_bottom", "CaloriesSource", "SHORT_TEXT", "SUNRISE_SUNSET"),
-    (SLOT_LOWER_LEFT, 2, "slot_lower_left", "FloorsSource", "GOAL_PROGRESS",
-     "UNREAD_NOTIFICATION_COUNT"),
-    (SLOT_LEFT, 3, "slot_left", "ElevationSource", "SHORT_TEXT", "WORLD_CLOCK"),
-    (SLOT_STEPS, 4, "slot_steps", "StepsSource", "GOAL_PROGRESS", "STEP_COUNT"),
+    (SLOT_BOTTOM, 1, "slot_bottom",
+     f"{GOOGLE_HEALTH}.calories.OffloadableCaloriesComplicationDataSourceService", "SHORT_TEXT",
+     "EMPTY"),
+    (SLOT_LOWER_LEFT, 2, "slot_lower_left",
+     f"{GOOGLE_HEALTH}.floors.OffloadableFloorsComplicationDataSourceService", "GOAL_PROGRESS",
+     "EMPTY"),
+    (SLOT_LEFT, 3, "slot_left", stats_source("ElevationSource"), "SHORT_TEXT", "WORLD_CLOCK"),
+    (SLOT_STEPS, 4, "slot_steps", GOOGLE_HEALTH_STEPS, "GOAL_PROGRESS", "EMPTY"),
 ]
 
-#: Slots that can't be changed in the editor, with the goal their gauge uses
-#: instead of the source's (an expression, used when it is above 0). Steps
-#: are always steps, against the watch's own step goal, which data sources
-#: can't read.
-FIXED_SLOTS = {SLOT_STEPS: "[STEP_GOAL]"}
+#: Slots that can't be changed in the editor: steps are always steps.
+FIXED_SLOTS = {SLOT_STEPS}
 
 FONT = {"family": "SYNC_TO_DEVICE", "weight": "BOLD", "width": "CONDENSED"}
 #: Connect IQ font sizes are the full line height; Watch Face Format sizes
@@ -512,17 +519,16 @@ def complication_slot(scene, slot, slot_id, display_name, source, source_type,
     """A stat from a complication data source, drawn like DataDial's own:
     the source's icon (tinted) toward the center, or its title if it has no
     icon; its text toward the edge; and a gauge for ranged and goal values.
-    A slot in FIXED_SLOTS can't be changed and uses its goal for the gauge."""
+    A slot in FIXED_SLOTS can't be changed."""
     x0, y0, w, h = cell_bounds(slot)
     offset = (x0, y0)
-    fixed_goal = FIXED_SLOTS.get(slot)
     cs = el(scene, "ComplicationSlot", x=x0, y=y0, width=w, height=h,
             slotId=slot_id, displayName=display_name,
             supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY",
-            isCustomizable="FALSE" if fixed_goal else "TRUE")
+            isCustomizable="FALSE" if slot in FIXED_SLOTS else "TRUE")
     el(cs, "DefaultProviderPolicy", defaultSystemProvider=system_source,
-       defaultSystemProviderType="SHORT_TEXT", primaryProvider=stats_source(source),
-       primaryProviderType=source_type)
+       defaultSystemProviderType="EMPTY" if system_source == "EMPTY" else "SHORT_TEXT",
+       primaryProvider=source, primaryProviderType=source_type)
     el(cs, "BoundingBox", x=0, y=0, width=w, height=h)
     ambient_hide(cs)
 
@@ -551,10 +557,6 @@ def complication_slot(scene, slot, slot_id, display_name, source, source_type,
         elif ctype == "GOAL_PROGRESS":
             v, target = ("[COMPLICATION.GOAL_PROGRESS_VALUE]",
                          "[COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]")
-            if fixed_goal:
-                # The watch's goal reads 0 without health data (as on the
-                # emulator): the source's goal is used then.
-                target = f"({fixed_goal} > 0 ? {fixed_goal} : {target})"
             progress = f"{v} / {target}"
             met = f"{v} >= {target}"
             gauge(comp, slot, progress, met, goal_colors(f"(100 * {progress})", met),
@@ -1132,8 +1134,7 @@ def render_images():
 
 #: DataDial Stats' icons: drawable name and the art/ SVG it comes from. The
 #: data source icons are white (the watch face tints them).
-STATS_ICONS = [("ic_steps", "steps"), ("ic_calories", "flame"), ("ic_floors", "floors"),
-               ("ic_elevation", "mountain")]
+STATS_ICONS = [("ic_elevation", "mountain")]
 
 
 def vector(paths, color="#FFFFFF", background=None, scale=1.0):
@@ -1179,17 +1180,14 @@ def svg_path_data(svg_file):
 
 
 def write_stats_icons():
-    """DataDial Stats' icons on the watch, and its app icon on the phone."""
-    # App icon: the elevation mountain in DataDial's blue on black.
-    launcher = vector(svg_path_data(ART / "mountain.svg"), color=PALETTE[0][1],
-                      background="#000000", scale=0.6)
+    out = STATS_RES / "drawable"
+    out.mkdir(parents=True, exist_ok=True)
     icons = {name: vector(svg_path_data(ART / f"{svg}.svg")) for name, svg in STATS_ICONS}
-    icons["ic_launcher"] = launcher
-    for res, files in ((STATS_RES, icons), (PHONE_RES, {"ic_launcher": launcher})):
-        out = res / "drawable"
-        out.mkdir(parents=True, exist_ok=True)
-        for name, xml in files.items():
-            (out / f"{name}.xml").write_text(xml, encoding="utf-8", newline="\n")
+    # App icon: the elevation mountain in DataDial's blue on black.
+    icons["ic_launcher"] = vector(svg_path_data(ART / "mountain.svg"), color=PALETTE[0][1],
+                                  background="#000000", scale=0.6)
+    for name, xml in icons.items():
+        (out / f"{name}.xml").write_text(xml, encoding="utf-8", newline="\n")
 
 
 #: The test build's time (hour, minute, second), also the picker preview's:
@@ -1207,7 +1205,6 @@ TEST_VALUES = {
     "[HOUR_0_23_Z]": f"{TEST_TIME[0]:02d}",
     "[MINUTE_Z]": f"{TEST_TIME[1]:02d}",
     "[SECOND_Z]": f"{TEST_TIME[2]:02d}",
-    "[STEP_GOAL]": "41667",  # DataDial Stats' test steps (25,000) are 60% of it
     "[HEART_RATE]": "160",
     "[BATTERY_PERCENT]": "100",
     "[BATTERY_CHARGING_STATUS]": "(1 == 1)",

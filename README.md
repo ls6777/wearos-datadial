@@ -5,10 +5,9 @@ Watch face for the Google Pixel Watch 5 (Wear OS 7), ported from the Connect IQ
 around the dial, with the time shown either as analog hands or as a large digital time in
 the middle (analog by default), and the same stats as the Garmin version.
 
-It comes as the watch face itself and **DataDial Stats**, a small companion app with a part on
-the watch and a part on the phone. DataDial Stats supplies the stats the face can't get the
-way DataDial shows them: steps, calories and floors as the **Google Health** app counts them,
-and elevation.
+Steps, calories and floors come from the **Google Health** app on the watch, so they show the
+same numbers as the Google Health app on the phone. A small companion app, **DataDial Stats**,
+supplies the elevation, which Wear OS doesn't give watch faces.
 
 It is built with the [Watch Face Format](https://developer.android.com/training/wearables/wff)
 (version 4), which Google requires for watch faces. It runs on any round Wear OS 6 or later
@@ -19,9 +18,10 @@ watch.
 *Test build (`./build.sh test`) on the Wear OS 7 emulator: analog with the default blue
 (left) and digital with the green accent (right), at the test build's fixed time of 8:19:11,
 which keeps the hands clear of the stats. The test build shows the same fixed values as the
-Garmin test build: 25,000 steps (60% of the goal), heart rate 160, 100% battery while
-charging, sunny and 110 °F (hot; high 112 °F, low 95 °F), 3,500 calories, 110 floors (goal
-met) and 13,000 ft, plus UV index 11 (extreme).*
+Garmin test build: heart rate 160, 100% battery while charging, sunny and 110 °F (hot; high
+112 °F, low 95 °F) and 13,000 ft, plus UV index 11 (extreme). Steps, calories and floors now
+come from Google Health, so the test build shows their real values; the screenshot is from
+before, with fixed ones (25,000 steps, 3,500 calories, 110 floors).*
 
 ## The face
 
@@ -35,83 +35,66 @@ The battery moves into the 12 o'clock section, under the date.
 | 12 o'clock | Date, weekday | Same, plus the battery % under them |
 | 1:30 | Heart rate | Same |
 | 3 o'clock | Battery %, days left | **UV index** from the weather; the battery % is at 12 o'clock |
-| 4:30 | Steps, with goal gauge | Same, Google Health's count from DataDial Stats |
-| 6 o'clock | Calories | Same, Google Health's count from DataDial Stats |
-| 7:30 | Floors, with goal gauge | Same, Google Health's count from DataDial Stats (goal: 10 floors) |
+| 4:30 | Steps, with goal gauge | Same, from Google Health (its goal) |
+| 6 o'clock | Calories | Same, from Google Health |
+| 7:30 | Floors, with goal gauge | Same, from Google Health (its goal) |
 | 9 o'clock | Elevation | Same, from DataDial Stats (barometer) |
 | 10:30 | Temperature (watch sensor) | **Weather**: condition icon, current temperature, today's high/low |
 
-### DataDial Stats
+### Steps, calories and floors
 
 A Watch Face Format face is XML with no code. Of the health stats it can only read steps and
-heart rate (besides the battery and the weather): it has no calories, floors or elevation
-(checked against Watch Face Format version 5). Its steps are the watch's own count, which
-starts again from 0 when the watch restarts and doesn't match the Google Health app.
-DataDial Stats supplies them and hands them to the face as
-[complications](https://developer.android.com/training/wearables/wff/complications), which
-DataDial uses by default:
+heart rate itself (besides the battery and the weather), and its steps are the watch's own
+count, which starts again from 0 when the watch restarts and doesn't match the Google Health
+app. So steps, calories and floors are
+[complications](https://developer.android.com/training/wearables/wff/complications) from the
+Google Health app on the watch (its package is still `com.fitbit.FitbitMobile`): today's
+totals as Google Health counts them, with its step and floor goals for the gauges. Calories
+include resting calories, as on Garmin.
 
-- **Steps**, **calories** and **floors** are Google Health's totals for today, so the face
-  shows the same numbers as the Google Health app on the phone. Google Health keeps them to
-  itself on the watch (no complications, nothing in the watch's Health Connect), but on the
-  phone it writes them to Health Connect. DataDial Stats on the phone reads Google Health's
-  own records there (not the steps the phone counts itself) and sends the totals to the
-  watch.
-- Between syncs the face adds what the watch has counted since Google Health's newest record
-  (the system's daily totals,
-  [`PlatformHealthSources`](https://developer.android.com/reference/kotlin/androidx/wear/protolayout/expression/PlatformHealthSources),
-  which the system keeps current on the face by itself), so the values stay live. Each sync
-  puts them back on Google Health's numbers. They never go below Google Health's total.
-- When the watch restarts, its own totals start again from 0. DataDial Stats notices and
-  carries over what the watch had counted. At midnight the face switches to the watch's own
-  count until the phone sends the new day's totals. Without the phone app, the face shows
-  the watch's own count (carried over restarts).
-- Calories include resting calories, as on Garmin. The steps gauge uses the watch's step
-  goal. Wear OS has no floors goal, so the floors gauge uses Garmin's default goal of 10
-  floors.
-- **Elevation** comes from the barometer, in feet where the watch's region uses US units and
-  meters elsewhere. The barometer only knows air pressure, which changes with the weather, so
-  DataDial Stats calibrates it to the altitude of a location fix: each time you open the app
-  (if it may use the location), and whenever it finds a recent fix while updating.
-  Uncalibrated, it assumes standard sea-level pressure, which can be off by a few hundred feet.
+They come from Google Health only, with no fallback: if Google Health is missing or disabled
+on the watch, the three sections show `--`. (It can be disabled by accident in the watch's
+Settings → Apps; it then also stops recording, and its tiles disappear.)
 
-**How often they update.** DataDial Stats doesn't run all the time: Android starts it when it
-has something to do, and it reads a value and stops. Steps, calories and floors are live
-(above). The phone reads Google Health's totals every 15 minutes (the shortest period Android
-allows) and whenever the watch asks, which it does at most every 5 minutes and right after a
-restart. Google Health itself writes to Health Connect a few minutes behind. Elevation is read
-from the barometer whenever
+### DataDial Stats
+
+**Elevation** comes from the barometer, in feet where the watch's region uses US units and
+meters elsewhere. A Watch Face Format face can't read it (checked against Watch Face Format
+version 5), so DataDial Stats reads it and hands it to the face as a complication. The
+barometer only knows air pressure, which changes with the weather, so DataDial Stats
+calibrates it to the altitude of a location fix: each time you open the app (if it may use
+the location), and whenever it finds a recent fix while updating. Uncalibrated, it assumes
+standard sea-level pressure, which can be off by a few hundred feet.
+
+**How often it updates.** DataDial Stats doesn't run all the time: Android starts it when it
+has something to do, and it reads a value and stops. The system is supposed to ask for the
+elevation every 5 minutes, but it mostly doesn't, and waking the screen doesn't trigger a
+reading. So DataDial Stats also reads it whenever
 [Health Services](https://developer.android.com/health-and-fitness/guides/health-services)
-wakes the app with new activity data (about once a minute on the emulator and the watch). The
-system is also supposed to ask for every stat every 5 minutes, but it mostly doesn't, and
-waking the screen doesn't trigger a reading.
-`./build.sh statslog` shows each request, each Health Services delivery and each set of
-totals from the phone, with its time (on the phone: each set of totals sent).
+wakes the app with new activity data (daily calories, which go up every minute even at rest).
+That's about once a minute on the emulator, less often on the Pixel Watch; Google doesn't
+document the rate.
+`./build.sh statslog` shows each request and each Health Services delivery with its time.
 
-After installing, open DataDial Stats once on each device and tap **Allow access**:
+After installing, open DataDial Stats once and tap **Allow access**: it needs physical
+activity (for the Health Services wake-ups) and, optionally, location (to calibrate the
+elevation). The app's screen shows the elevation and when it was last calibrated.
 
-- **Watch:** physical activity (for the watch's own counts) and, optionally, location (to
-  calibrate the elevation). The screen shows what each stat reads, when Google Health's totals
-  last came from the phone, and when the elevation was last calibrated.
-- **Phone:** Health Connect access to steps, total calories burned, floors climbed, and access
-  in the background. The screen shows the totals last sent to the watch.
-
-The 6, 7:30 and 9 o'clock sections are still complication slots: long-press the face, tap the
-edit button, and pick any other data source an app on the watch provides (steps always shows
-steps). They're drawn in
-DataDial's style: the source's icon in the accent color, its value in white, and the goal
-gauge along the edge for sources that report progress toward a target (ranged or goal
-values). A source with no data at the moment shows nothing; with no source chosen, the
-section shows `--`. Without DataDial Stats installed, they default to sunrise/sunset, unread
-notifications and a world clock, and steps to the watch's own step count.
+The 6, 7:30 and 9 o'clock sections can show other stats: long-press the face, tap the edit
+button, and pick any other data source an app on the watch provides (steps always shows
+steps). They're drawn in DataDial's style: the source's icon in the accent color (Google
+Health's icons keep their own colors), its value in white, and the goal gauge along the edge
+for sources that report progress toward a target (ranged or goal values). A source with no
+data at the moment shows nothing; with no source chosen, the section shows `--`. Without
+DataDial Stats installed, the elevation section shows a world clock.
 
 - **Battery:** under the date and weekday, the percentage above an outline filled to the
   charge level; below 20% both turn red. A green bolt appears over the outline while charging.
 - **UV index:** the current UV index from the watch's weather, in WHO risk colors from high
   up: orange from 6, red from 8, purple from 11 (white below 6). Without weather data it
   shows `--`.
-- **Goals:** the steps gauge (and the gauge of a goal or ranged complication) fills from its
-  lower end toward the goal: red below 30%, yellow below 90%, green from 90%. Once the goal
+- **Goals:** the steps and floors gauges (and the gauge of any goal or ranged complication)
+  fill from their lower end toward the goal: red below 30%, yellow below 90%, green from 90%. Once the goal
   is met, the value turns green too.
 - **Weather:** an icon for the current condition (sunny or clear, partly cloudy, cloudy, fog,
   mist, light rain, rain, heavy rain, light snow, snow, heavy snow, sleet, thunderstorm,
@@ -147,10 +130,8 @@ version, and renders the images (icons from `art/`, the steel hands, the bolt an
 weather icons) with Pillow. It also writes DataDial Stats' icons from the same `art/` files.
 Edit the script, not the generated files.
 
-DataDial Stats is a separate Kotlin app, because a Watch Face Format bundle can't contain
-code: `stats/` on the watch and `phone/` on the phone. They share the application ID (the
-Wearable Data Layer only connects apps with the same ID and signing key) and the message
-format in `shared/`.
+DataDial Stats (`stats/`) is a separate Kotlin app, because a Watch Face Format bundle can't
+contain code.
 
 | File | Purpose |
 |---|---|
@@ -162,19 +143,12 @@ format in `shared/`.
 | `watchface/src/main/res/xml/watch_face_info.xml` | Preview image and picker settings |
 | `watchface/src/main/res/values/strings.xml` | Names shown in the editor |
 | `watchface/src/main/res/drawable/preview.png` | Picker and store preview (an emulator capture of the test build) |
-| `stats/src/main/kotlin/.../Sources.kt` | DataDial Stats' four complication data sources |
-| `stats/src/main/kotlin/.../Live.kt` | Google Health's totals kept live with the watch's own count |
-| `stats/src/main/kotlin/.../Phone.kt` | Totals from the phone, and asking for new ones |
-| `stats/src/main/kotlin/.../Health.kt` | The watch's daily steps, calories and floors from Health Services |
-| `stats/src/main/kotlin/.../Store.kt` | Stored totals, restart carry-over and settings |
+| `stats/src/main/kotlin/.../Sources.kt` | DataDial Stats' elevation data source |
+| `stats/src/main/kotlin/.../Health.kt` | Health Services wake-ups that refresh the elevation |
 | `stats/src/main/kotlin/.../Elevation.kt` | Barometric elevation and its calibration |
 | `stats/src/main/kotlin/.../Sensors.kt` | One-shot sensor readings |
 | `stats/src/main/kotlin/.../MainActivity.kt` | Permissions and status screen |
 | `stats/src/debug/` | Debug build only: switch for the fixed test values |
-| `phone/src/main/kotlin/.../GoogleHealth.kt` | Reads Google Health's totals from Health Connect |
-| `phone/src/main/kotlin/.../SyncWorker.kt` | Sends them to the watch every 15 minutes and on request |
-| `phone/src/main/kotlin/.../MainActivity.kt` | Health Connect access and status screen |
-| `shared/src/main/kotlin/.../Totals.kt` | The totals and how they travel over the Data Layer |
 
 ## Build
 
@@ -182,10 +156,9 @@ Needs Android Studio (for its JDK; the Android SDK with API 36 platform and buil
 Python 3 with Pillow.
 
 ```sh
-./build.sh          # generate and build the debug APKs (watch face, DataDial Stats for watch and phone)
-./build.sh run      # also install the face and DataDial Stats on the watch and make DataDial the active face
+./build.sh          # generate and build the debug APKs (watch face and DataDial Stats)
+./build.sh run      # also install both on the watch or emulator and make DataDial the active face
 ./build.sh test     # the same with fixed worst-case values, to check the layout
-./build.sh phone    # install DataDial Stats on the phone
 ./build.sh release  # release bundles (.aab) for Google Play (set up release signing first)
 ./build.sh log      # the watch face runtime's log: XML and expression errors show up here
 ./build.sh statslog # DataDial Stats' log: when each stat is read, and its value
@@ -198,8 +171,8 @@ Run `./build.sh run` afterwards to put the live face and live stats back on the 
 DataDial Stats is installed before the face: the face only picks up its default data sources
 if they're installed when it is.
 
-With several devices connected (say the watch and the phone), set `ANDROID_SERIAL` to the one
-to install on, e.g. `ANDROID_SERIAL=192.168.4.46:38067 ./build.sh run`.
+With several devices connected (say the watch and the emulator), set `ANDROID_SERIAL` to the
+one to install on, e.g. `ANDROID_SERIAL=192.168.4.46:38067 ./build.sh run`.
 
 The project also opens in Android Studio, which checks the watch face XML as you edit it.
 
@@ -212,14 +185,10 @@ The project also opens in Android Studio, which checks the watch face XML as you
   Build number seven times), then Developer options → Wireless debugging → Pair new device.
   On the PC: `adb pair <ip>:<port>` with the shown code, then `adb connect <ip>:<port>` with
   the port shown on the Wireless debugging screen, and `./build.sh run`.
-- **Phone:** turn on Developer options (Settings → About phone → Software information, tap
-  Build number seven times) and Wireless debugging the same way, pair and connect, then
-  `./build.sh phone`. On a Samsung phone, turn off Auto Blocker (Settings → Security and
-  privacy) first: it blocks debugging and installing apps from outside the stores. You can
-  turn it back on afterwards.
 
 A watch face changed with `./build.sh run` keeps its settings and complications. To get the
 defaults again, uninstall it first (`adb uninstall io.github.ls6777.datadial`). Do the same
-after adding or removing a complication slot: the runtime matches saved choices by slot order. On the
+after changing a slot's default source or adding or removing a slot: the runtime keeps the
+old choices and matches them by slot order. On the
 emulator, you can grant DataDial Stats' permissions without the app:
 `adb shell pm grant io.github.ls6777.datadial.stats android.permission.ACTIVITY_RECOGNITION`.

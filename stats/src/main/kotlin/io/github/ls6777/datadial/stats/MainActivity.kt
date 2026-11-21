@@ -1,8 +1,8 @@
 /**
  * @file MainActivity.kt
- * The app's one screen: asks for the permissions the stats need, registers
- * with Health Services, asks the phone for Google Health's totals,
- * calibrates the elevation and shows what each stat reads.
+ * The app's one screen: asks for the permissions the elevation needs,
+ * registers with Health Services (which wakes the app to refresh it),
+ * calibrates the elevation and shows what it reads.
  */
 package io.github.ls6777.datadial.stats
 
@@ -82,14 +82,9 @@ class MainActivity : Activity() {
         )
     }
 
-    /**
-     * Register, get Google Health's totals, show the stats, then calibrate
-     * the elevation (a location fix can take a while).
-     */
+    /** Register, show the elevation, then calibrate it (a location fix can take a while). */
     private fun refresh() = scope.launch {
         val health = Health.register(this@MainActivity)
-        Phone.load(this@MainActivity)
-        Phone.requestRefresh(this@MainActivity, force = true)
         allow.visibility = if (Health.permitted(this@MainActivity) && Elevation.locationPermitted(this@MainActivity)) {
             View.GONE
         } else {
@@ -112,14 +107,7 @@ class MainActivity : Activity() {
     }
 
     private suspend fun show(health: String, calibration: String) {
-        fun value(daily: Daily) = Live.now(this, daily)?.toLong()?.toString() ?: Sources.NO_VALUE
-        val phone = Store.phoneReceived(this)?.let {
-            getString(R.string.phone_received, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(it.toEpochMilli())))
-        } ?: getString(R.string.phone_never)
         val elevation = Elevation.meters(this)?.let(Elevation::format) ?: Sources.NO_VALUE
-        status.text = getString(
-            R.string.status, health, phone, value(Daily.STEPS), value(Daily.CALORIES), value(Daily.FLOORS),
-            elevation, calibration,
-        )
+        status.text = getString(R.string.status, elevation, calibration, health)
     }
 }

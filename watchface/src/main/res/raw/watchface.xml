@@ -566,7 +566,7 @@
             </Condition>
         </Group>
         <ComplicationSlot x="149" y="287" width="152" height="137" slotId="1" displayName="slot_bottom" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="TRUE">
-            <DefaultProviderPolicy defaultSystemProvider="SUNRISE_SUNSET" defaultSystemProviderType="SHORT_TEXT" primaryProvider="io.github.ls6777.datadial.stats/io.github.ls6777.datadial.stats.CaloriesSource" primaryProviderType="SHORT_TEXT" />
+            <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" primaryProvider="com.fitbit.FitbitMobile/com.google.android.wearable.fitbit.mainapp.complications.offloadable.calories.OffloadableCaloriesComplicationDataSourceService" primaryProviderType="SHORT_TEXT" />
             <BoundingBox x="0" y="0" width="152" height="137" />
             <Variant mode="AMBIENT" target="alpha" value="0" />
             <Complication type="SHORT_TEXT">
@@ -791,7 +791,7 @@
             </Complication>
         </ComplicationSlot>
         <ComplicationSlot x="41" y="250" width="159" height="159" slotId="2" displayName="slot_lower_left" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="TRUE">
-            <DefaultProviderPolicy defaultSystemProvider="UNREAD_NOTIFICATION_COUNT" defaultSystemProviderType="SHORT_TEXT" primaryProvider="io.github.ls6777.datadial.stats/io.github.ls6777.datadial.stats.FloorsSource" primaryProviderType="GOAL_PROGRESS" />
+            <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" primaryProvider="com.fitbit.FitbitMobile/com.google.android.wearable.fitbit.mainapp.complications.offloadable.floors.OffloadableFloorsComplicationDataSourceService" primaryProviderType="GOAL_PROGRESS" />
             <BoundingBox x="0" y="0" width="159" height="159" />
             <Variant mode="AMBIENT" target="alpha" value="0" />
             <Complication type="SHORT_TEXT">
@@ -1241,7 +1241,7 @@
             </Complication>
         </ComplicationSlot>
         <ComplicationSlot x="250" y="250" width="159" height="159" slotId="4" displayName="slot_steps" supportedTypes="SHORT_TEXT RANGED_VALUE GOAL_PROGRESS EMPTY" isCustomizable="FALSE">
-            <DefaultProviderPolicy defaultSystemProvider="STEP_COUNT" defaultSystemProviderType="SHORT_TEXT" primaryProvider="io.github.ls6777.datadial.stats/io.github.ls6777.datadial.stats.StepsSource" primaryProviderType="GOAL_PROGRESS" />
+            <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY" primaryProvider="com.fitbit.FitbitMobile/com.fitbit.complications.offloadable.steps.OffloadableStepsComplicationDataSourceService" primaryProviderType="GOAL_PROGRESS" />
             <BoundingBox x="0" y="0" width="159" height="159" />
             <Variant mode="AMBIENT" target="alpha" value="0" />
             <Complication type="SHORT_TEXT">
@@ -1389,7 +1389,7 @@
                 </Condition>
                 <Condition>
                     <Expressions>
-                        <Expression name="track3">!([COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]))</Expression>
+                        <Expression name="track3">!([COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])</Expression>
                     </Expressions>
                     <Compare expression="track3">
                         <PartDraw x="-250" y="-250" width="450" height="450">
@@ -1401,14 +1401,14 @@
                 </Condition>
                 <Condition>
                     <Expressions>
-                        <Expression name="g3green">([COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])) || (100 * [COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])) &gt;= 90</Expression>
-                        <Expression name="g3yellow">(100 * [COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])) &gt;= 30</Expression>
+                        <Expression name="g3green">([COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]) || (100 * [COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]) &gt;= 90</Expression>
+                        <Expression name="g3yellow">(100 * [COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]) &gt;= 30</Expression>
                     </Expressions>
                     <Compare expression="g3green">
                         <PartDraw x="-250" y="-250" width="450" height="450">
                             <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
                                 <Stroke color="#3DDC57" thickness="6" />
-                                <Transform target="startAngle" value="152.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]), 0, 1)" />
+                                <Transform target="startAngle" value="152.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
                         </PartDraw>
                     </Compare>
@@ -1416,7 +1416,7 @@
                         <PartDraw x="-250" y="-250" width="450" height="450">
                             <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
                                 <Stroke color="#FFD60A" thickness="6" />
-                                <Transform target="startAngle" value="152.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]), 0, 1)" />
+                                <Transform target="startAngle" value="152.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
                         </PartDraw>
                     </Compare>
@@ -1424,14 +1424,14 @@
                         <PartDraw x="-250" y="-250" width="450" height="450">
                             <Arc centerX="225" centerY="225" width="384.75" height="384.75" startAngle="152.5" endAngle="152.5">
                                 <Stroke color="#FF3B30" thickness="6" />
-                                <Transform target="startAngle" value="152.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]), 0, 1)" />
+                                <Transform target="startAngle" value="152.5 + -35 * clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE], 0, 1)" />
                             </Arc>
                         </PartDraw>
                     </Default>
                 </Condition>
                 <Condition>
                     <Expressions>
-                        <Expression name="met3GOAL_PROGRESS">[COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= ([STEP_GOAL] &gt; 0 ? [STEP_GOAL] : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE])</Expression>
+                        <Expression name="met3GOAL_PROGRESS">[COMPLICATION.GOAL_PROGRESS_VALUE] &gt;= [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]</Expression>
                     </Expressions>
                     <Compare expression="met3GOAL_PROGRESS">
                         <PartText x="21" y="66" width="104" height="35">

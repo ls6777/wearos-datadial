@@ -2,23 +2,15 @@
 <resources>
     <string name="app_name">DataDial Stats</string>
 
-    <!-- Data source names, shown in the watch face editor -->
-    <string name="steps">Steps</string>
-    <string name="calories">Calories</string>
-    <string name="floors">Floors</string>
+    <!-- Data source name, shown in the watch face editor -->
     <string name="elevation">Elevation</string>
 
-    <!-- Screen reader descriptions -->
-    <string name="steps_value">%1$s steps</string>
-    <string name="calories_value">%1$s calories</string>
-    <string name="floors_value">%1$s floors, goal %2$d</string>
+    <!-- Screen reader description -->
     <string name="elevation_value">Elevation %1$s</string>
 
     <!-- App screen -->
     <string name="allow">Allow access</string>
-    <string name="status">Health data: %1$s\n%2$s\nSteps: %3$s\nCalories: %4$s\nFloors: %5$s\nElevation: %6$s\n%7$s</string>
-    <string name="phone_never">No totals from the phone yet: install DataDial Stats on the phone</string>
-    <string name="phone_received">Google Health totals from the phone at %1$s</string>
+    <string name="status">Elevation: %1$s\n%2$s\nUpdates: %3$s</string>
     <string name="calibrating">Calibrating elevation…</string>
     <string name="calibrated_now">Elevation calibrated just now</string>
     <string name="calibrated_at">Elevation calibrated %1$s</string>
