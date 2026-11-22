@@ -30,7 +30,8 @@
         </activity>
 
         <!-- The elevation data source. DataDial uses it as the default of its
-             9 o'clock stat, so it is listed as a safe watch face. -->
+             9 o'clock stat, and Night Dial as its elevation gauge's, so both
+             are listed as safe watch faces. -->
         <service
             android:name=".ElevationSource"
             android:label="@string/elevation"
@@ -48,7 +49,7 @@
                 android:value="300" />
             <meta-data
                 android:name="android.support.wearable.complications.SAFE_WATCH_FACES"
-                android:value="io.github.ls6777.datadial" />
+                android:value="io.github.ls6777.datadial,io.github.ls6777.nightdial" />
         </service>
 
         <!-- Woken by Health Services with new activity data. -->
