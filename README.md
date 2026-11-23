@@ -68,6 +68,14 @@ calibrates it to the altitude of a location fix: each time you open the app (if 
 the location), and whenever it finds a recent fix while updating. Uncalibrated, it assumes
 standard sea-level pressure, which can be off by a few hundred feet.
 
+**Battery time left** is a second data source, for the
+[Night Dial](https://github.com/ls6777/NightDial) watch face's battery gauge: the hours of
+battery left at the rate it has been draining ("23h"). Each time DataDial Stats wakes (see
+below) it records the battery level; once the battery has dropped 2% since it was last
+unplugged, hours left = level ÷ drain rate, up to the last 12 hours of samples. Until then it
+uses the last rate it measured. While charging, or before it has measured any rate, it sends
+no data. DataDial itself doesn't use it.
+
 **How often it updates.** DataDial Stats doesn't run all the time: Android starts it when it
 has something to do, and it reads a value and stops. The system is supposed to ask for the
 elevation every 5 minutes, but it mostly doesn't, and waking the screen doesn't trigger a
@@ -144,7 +152,8 @@ contain code.
 | `watchface/src/main/res/xml/watch_face_info.xml` | Preview image and picker settings |
 | `watchface/src/main/res/values/strings.xml` | Names shown in the editor |
 | `watchface/src/main/res/drawable/preview.png` | Picker and store preview (an emulator capture of the test build) |
-| `stats/src/main/kotlin/.../Sources.kt` | DataDial Stats' elevation data source |
+| `stats/src/main/kotlin/.../Sources.kt` | DataDial Stats' elevation and battery time data sources |
+| `stats/src/main/kotlin/.../Battery.kt` | Battery sampling and the time-left estimate |
 | `stats/src/main/kotlin/.../Health.kt` | Health Services wake-ups that refresh the elevation |
 | `stats/src/main/kotlin/.../Elevation.kt` | Barometric elevation and its calibration |
 | `stats/src/main/kotlin/.../Sensors.kt` | One-shot sensor readings |

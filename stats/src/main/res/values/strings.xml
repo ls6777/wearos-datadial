@@ -4,9 +4,11 @@
 
     <!-- Data source name, shown in the watch face editor -->
     <string name="elevation">Elevation</string>
+    <string name="battery_time">Battery time left</string>
 
     <!-- Screen reader description -->
     <string name="elevation_value">Elevation %1$s</string>
+    <string name="battery_time_value">%1$s of battery left</string>
 
     <!-- App screen -->
     <string name="allow">Allow access</string>

@@ -1,7 +1,7 @@
 /**
  * @file Health.kt
  * Health Services' passive monitoring, used to wake the app regularly so the
- * elevation stays current.
+ * elevation stays current and the battery is sampled for its drain rate.
  */
 package io.github.ls6777.datadial.stats
 
@@ -67,7 +67,7 @@ object Health {
     }
 }
 
-/** Woken by Health Services with new activity data: refreshes the elevation. */
+/** Woken by Health Services with new activity data: samples the battery and refreshes the sources. */
 class PassiveDataService : PassiveListenerService() {
     override fun onNewDataPointsReceived(dataPoints: DataPointContainer) {
         Log.i(Sources.TAG, "Health Services delivery")

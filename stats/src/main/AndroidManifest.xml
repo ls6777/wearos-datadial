@@ -52,6 +52,29 @@
                 android:value="io.github.ls6777.datadial,io.github.ls6777.nightdial" />
         </service>
 
+        <!-- The battery's time left, at the rate it has been draining. Night
+             Dial uses it as the default of its battery gauge, so it is listed
+             as a safe watch face. -->
+        <service
+            android:name=".BatteryTimeSource"
+            android:label="@string/battery_time"
+            android:icon="@drawable/ic_battery_time"
+            android:exported="true"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="300" />
+            <meta-data
+                android:name="android.support.wearable.complications.SAFE_WATCH_FACES"
+                android:value="io.github.ls6777.nightdial" />
+        </service>
+
         <!-- Woken by Health Services with new activity data. -->
         <service
             android:name=".PassiveDataService"

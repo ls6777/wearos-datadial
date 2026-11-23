@@ -1,7 +1,7 @@
 /**
  * @file Sources.kt
- * The complication data source for elevation, drawn by DataDial like its own
- * stats.
+ * The complication data sources: elevation, drawn by DataDial like its own
+ * stats, and the battery's time left, drawn by Night Dial.
  */
 package io.github.ls6777.datadial.stats
 
@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
 import androidx.wear.watchface.complications.data.MonochromaticImage
+import androidx.wear.watchface.complications.data.NoDataComplicationData
 import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceService
@@ -28,7 +29,7 @@ object Sources {
     const val NO_VALUE = "--"
 
     /** Every data source in the app. */
-    val ALL = listOf(ElevationSource::class.java)
+    val ALL = listOf(ElevationSource::class.java, BatteryTimeSource::class.java)
 
     /** Ask the system to request new data from every complication using a source. */
     fun update(context: Context, source: Class<out ComplicationDataSourceService>) {
@@ -39,12 +40,15 @@ object Sources {
     fun updateAll(context: Context) = ALL.forEach { update(context, it) }
 
     /**
-     * The sources that read a sensor (elevation). The system asks for them
-     * rarely (it doesn't keep to their update period), so they are also
-     * refreshed whenever Health Services wakes the app with new data.
+     * The sources that read a sensor (elevation, the battery). The system
+     * asks for them rarely (it doesn't keep to their update period), so
+     * they are also refreshed whenever Health Services wakes the app with
+     * new data, which also samples the battery for its drain rate.
      */
     fun updateSensors(context: Context) {
+        Battery.sample(context)
         update(context, ElevationSource::class.java)
+        update(context, BatteryTimeSource::class.java)
     }
 
     /** Log that the system asked a source for its value, and what it got. */
@@ -84,4 +88,30 @@ class ElevationSource : SuspendingComplicationDataSourceService() {
 
     private fun data(value: String) =
         Sources.shortText(this, value, getString(R.string.elevation_value, value), R.drawable.ic_elevation)
+}
+
+/**
+ * The battery's time left at the rate it has been draining ("23h"), for
+ * Night Dial's battery gauge. No data while charging or before a rate is
+ * known.
+ */
+class BatteryTimeSource : SuspendingComplicationDataSourceService() {
+    override fun onComplicationActivated(complicationInstanceId: Int, type: ComplicationType) =
+        Health.registerAsync(this)
+
+    override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData {
+        val value = if (Store.testValues(this)) {
+            Battery.format(23)
+        } else {
+            Battery.sample(this)
+            Battery.hoursLeft(this)?.let(Battery::format)
+        }
+        Sources.logRequest("Battery time", value ?: "no data")
+        return value?.let(::data) ?: NoDataComplicationData()
+    }
+
+    override fun getPreviewData(type: ComplicationType) = data(Battery.format(23))
+
+    private fun data(value: String) =
+        Sources.shortText(this, value, getString(R.string.battery_time_value, value), R.drawable.ic_battery_time)
 }
