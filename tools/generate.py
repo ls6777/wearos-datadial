@@ -265,6 +265,9 @@ def text(parent, cx, cy, width, size, template, params, color=WHITE,
         t.set("isAutoSize", "TRUE")
     font = el(t, "Font", size=float(round(size, 1)), color=color, **FONT)
     holder = el(font, "Upper") if upper else font
+    if not params:
+        # The format needs a Template to have a Parameter: fixed text is one.
+        template, params = "%s", [f'"{template}"']
     tpl = el(holder, "Template")
     tpl.text = template
     for p in params:
@@ -626,7 +629,7 @@ def analog_clock(parent, frozen=None):
     hands in always-on mode. frozen is an (hour, minute, second) to draw
     the awake hands at instead of the time, for the test build."""
     if frozen is None:
-        clock = el(parent, "AnalogClock", x=0, y=0, width=SIZE, height=SIZE, name="hands")
+        clock = el(parent, "AnalogClock", x=0, y=0, width=SIZE, height=SIZE)
         angles = (None, None, None)
     else:
         clock = el(parent, "Group", x=0, y=0, width=SIZE, height=SIZE, name="hands")
@@ -637,8 +640,7 @@ def analog_clock(parent, frozen=None):
                                      ("hand_hour", "hand_minute", "hand_second"), angles):
         hand_parts(clock, kind, resource, angle=angle)
 
-    sleep = el(parent, "AnalogClock", x=0, y=0, width=SIZE, height=SIZE,
-               name="sleepHands", alpha=0)
+    sleep = el(parent, "AnalogClock", x=0, y=0, width=SIZE, height=SIZE, alpha=0)
     ambient_only(sleep)
     hand_parts(sleep, "HourHand", "hand_hour_flat", tint=SLEEP)
     hand_parts(sleep, "MinuteHand", "hand_minute_flat", tint=SLEEP)
@@ -680,9 +682,12 @@ def digital_clock(parent):
 def clock(scene):
     """Divider lines and the time, by the clock style setting."""
     config = el(scene, "ListConfiguration", id="clockStyle")
-    analog = el(config, "ListOption", id="0")
+    # The format allows one element in a ListOption: a full-face Group of each style.
+    analog = el(el(config, "ListOption", id="0"), "Group", name="analogClock",
+                x=0, y=0, width=SIZE, height=SIZE)
     divider_lines(analog, LINE_START)
-    digital = el(config, "ListOption", id="1")
+    digital = el(el(config, "ListOption", id="1"), "Group", name="digitalClock",
+                 x=0, y=0, width=SIZE, height=SIZE)
     divider_lines(digital, DIGITAL_LINE_START)
     digital_clock(digital)
     return analog

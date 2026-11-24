@@ -1,7 +1,7 @@
 # DataDial for Wear OS
 
 Watch face for the Google Pixel Watch 5 (Wear OS 7), ported from the Connect IQ
-[DataDial](https://github.com/ls6777/garmin-datadial) for the Garmin fēnix 9. Eight stats
+[DataDial](https://github.com/ls6777/garmin-datadial) for the Garmin fÄ“nix 9. Eight stats
 around the dial, with the time shown either as analog hands or as a large digital time in
 the middle (analog by default), and the same stats as the Garmin version.
 
@@ -18,8 +18,8 @@ watch.
 *Test build (`./build.sh test`) on the Wear OS 7 emulator: analog with the default blue
 (left) and digital with the green accent (right), at the test build's fixed time of 8:19:11,
 which keeps the hands clear of the stats. The test build shows the same fixed values as the
-Garmin test build: heart rate 160, 100% battery while charging, sunny and 110 °F (hot; high
-112 °F, low 95 °F) and 13,000 ft, plus UV index 11 (extreme). Steps, calories and floors now
+Garmin test build: heart rate 160, 100% battery while charging, sunny and 110 Â°F (hot; high
+112 Â°F, low 95 Â°F) and 13,000 ft, plus UV index 11 (extreme). Steps, calories and floors now
 come from Google Health, so the test build shows their real values; the screenshot is from
 before, with fixed ones (25,000 steps, 3,500 calories, 110 floors).*
 
@@ -56,7 +56,7 @@ instead, and they can't be switched to other sources.
 
 They come from Google Health only, with no fallback: if Google Health is missing or disabled
 on the watch, the three sections show `--`. (It can be disabled by accident in the watch's
-Settings → Apps; it then also stops recording, and its tiles disappear.)
+Settings â†’ Apps; it then also stops recording, and its tiles disappear.)
 
 ### DataDial Stats
 
@@ -133,8 +133,8 @@ Stats installed, it shows a world clock.
 - **Weather:** an icon for the current condition (sunny or clear, partly cloudy, cloudy, fog,
   mist, light rain, rain, heavy rain, light snow, snow, heavy snow, sleet, thunderstorm,
   windy; the sun becomes a moon at night) and the current temperature in the watch's
-  weather unit. Below 40 °F (4.4 °C) the temperature turns ice blue; above 90 °F (32.2 °C)
-  it turns red. Under it, today's high and low in gray ("72°/58°"). The three are stacked
+  weather unit. Below 40 Â°F (4.4 Â°C) the temperature turns ice blue; above 90 Â°F (32.2 Â°C)
+  it turns red. Under it, today's high and low in gray ("72Â°/58Â°"). The three are stacked
   in a column: icon, temperature, high/low. Without weather data it shows just `--` (the
   thermometer appears only if the weather reports an unknown condition). The weather comes
   from the watch (which gets the location from the phone), the same data as the UV index.
@@ -171,7 +171,7 @@ contain code.
 |---|---|
 | `tools/generate.py` | Writes `res/raw/watchface.xml` and the images in `res/drawable/` |
 | `art/` | Icon SVGs, shared with the Garmin version |
-| `build.sh` | Generate, build, install, test build, runtime log |
+| `build.sh` | Generate, check, build, install, test build, release, runtime log |
 | `watchface/src/main/AndroidManifest.xml` | Package, Watch Face Format version 4, no code |
 | `watchface/src/main/res/raw/watchface.xml` | The watch face (generated) |
 | `watchface/src/main/res/xml/watch_face_info.xml` | Preview image and picker settings |
@@ -196,12 +196,23 @@ Python 3 with Pillow.
 ./build.sh          # generate and build the debug APKs (watch face and DataDial Stats)
 ./build.sh run      # also install both on the watch or emulator and make DataDial the active face
 ./build.sh test     # the same with fixed worst-case values, to check the layout
-./build.sh release  # release bundles (.aab) for Google Play (set up release signing first)
+./build.sh release  # signed release APKs (for GitHub releases) and bundles (.aab, for Google Play)
 ./build.sh log      # the watch face runtime's log: XML and expression errors show up here
 ./build.sh statslog # DataDial Stats' log: when each stat is read, and its value
 ```
 
 DataDial Stats' unit tests run on the PC: `./gradlew :stats:testDebugUnitTest`.
+
+Every build runs Google's Watch Face Format checks on the watch face, and stops if either
+fails:
+
+- **Validator:** checks `watchface.xml` against the format version in the manifest.
+- **Memory footprint:** checks the APK against the limits Google Play's review uses (10 MB in
+  always-on mode, 100 MB awake).
+
+`build.sh` downloads both tools (`wff-validator.jar` and `memory-footprint.jar`, from
+[google/watchface](https://github.com/google/watchface/releases)) to `build/tools/` the first
+time. Delete that folder to get the latest versions.
 
 `./build.sh test` writes the normal XML back when it's done, so the test values never stay in
 the source, and switches on DataDial Stats' test values (a switch only the debug build has).
@@ -215,13 +226,40 @@ one to install on, e.g. `ANDROID_SERIAL=192.168.4.46:38067 ./build.sh run`.
 
 The project also opens in Android Studio, which checks the watch face XML as you edit it.
 
+### Release signing
+
+`./build.sh release` needs your release key, which signs both apps, and won't fall back to the
+debug key. Create the key once, and keep the keystore and its passwords out of this repo:
+
+```sh
+keytool -genkeypair -keystore ~/keys/datadial-release.jks -alias datadial \
+    -keyalg RSA -keysize 4096 -validity 10000
+```
+
+(`keytool` is in Android Studio's `jbr/bin`.) Then add to `~/.gradle/gradle.properties`:
+
+```properties
+datadial.keystore=C:/Users/<you>/keys/datadial-release.jks
+datadial.keystorePassword=...
+datadial.keyAlias=datadial
+datadial.keyPassword=...
+```
+
+The environment variables `DATADIAL_KEYSTORE`, `DATADIAL_KEYSTORE_PASSWORD`,
+`DATADIAL_KEY_ALIAS` and `DATADIAL_KEY_PASSWORD` work too. Back up the keystore: updates
+must be signed with the same key, or users have to uninstall the apps to install them.
+
+Versions 1.0.0 to 1.1.1 on GitHub were signed with the debug key, so updating from one of
+those to a release signed with the real key needs an uninstall first (DataDial Stats, then the
+face).
+
 ## Run on the emulator or the watch
 
 - **Emulator:** create a Wear OS 7 large round device (Device Manager in Android Studio, or
   `avdmanager create avd -k "system-images;android-37.0;android-wear-signed;x86_64" -d wearos_large_round`),
   start it, then `./build.sh run`.
-- **Pixel Watch 5:** turn on Developer options (Settings → System → About → Versions, tap
-  Build number seven times), then Developer options → Wireless debugging → Pair new device.
+- **Pixel Watch 5:** turn on Developer options (Settings â†’ System â†’ About â†’ Versions, tap
+  Build number seven times), then Developer options â†’ Wireless debugging â†’ Pair new device.
   On the PC: `adb pair <ip>:<port>` with the shown code, then `adb connect <ip>:<port>` with
   the port shown on the Wireless debugging screen, and `./build.sh run`.
 
