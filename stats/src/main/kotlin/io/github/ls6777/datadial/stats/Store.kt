@@ -53,14 +53,14 @@ object Store {
 
     /**
      * The battery drain model. Before there is one, it starts from the
-     * drain rate the earlier versions measured, if any, so the time left
-     * keeps showing after an update.
+     * drain rate the earlier versions measured, if any and plausible, so
+     * the time left keeps showing after an update.
      */
     fun batteryModel(context: Context): BatteryModel {
         val prefs = prefs(context)
         prefs.getString(BATTERY_MODEL, null)?.let { return BatteryModel.decode(it) }
         val rate = prefs.getFloat(OLD_BATTERY_RATE, 0f)
-        return if (rate > 0f) BatteryModel.seeded(rate.toDouble()) else BatteryModel.empty()
+        return if (rate > 0f) BatteryModel.starting(rate.toDouble()) else BatteryModel.empty()
     }
 
     /** Store the battery drain model, dropping the earlier versions' samples and rate. */

@@ -103,9 +103,46 @@ class BatteryModelTest {
     }
 
     @Test
-    fun seededModelPredictsFromItsRate() {
+    fun startsFromAnEarlierRate() {
         // 79.5% left (half the current percent assumed used) at 2%/h.
-        assertClose(39.75, BatteryModel.seeded(2.0).hoursLeft(START, 80, UTC), 0.01)
+        assertClose(39.75, BatteryModel.starting(2.0).hoursLeft(START, 80, UTC), 0.01)
+    }
+
+    @Test
+    fun ignoresAnImplausibleEarlierRate() {
+        // 315%/h: the emulator's battery level, set by hand.
+        assertNull(BatteryModel.starting(315.0).hoursLeft(START, 80, UTC))
+        assertNull(BatteryModel.starting(0.01).hoursLeft(START, 80, UTC))
+    }
+
+    @Test
+    fun dropsTheEarlierRateOnceItLearns() {
+        // A poor earlier rate (20%/h, from a fast drop just after unplugging)
+        // is gone once the watch's real 1.5%/h has been seen for a few hours.
+        val watch = Watch(BatteryModel.starting(20.0)) { _, _ -> 1.5 }
+        watch.run(3 * 60)
+        assertClose(watch.truth(), watch.predict(), 0.05)
+    }
+
+    @Test
+    fun readsVersion1Text() {
+        // 1.1.0's text for a model given 2%/h and nothing learned yet, with
+        // its last reading.
+        fun version1(perHour: Double) = listOf(
+            "1",
+            List(24) { perHour / 24 }.joinToString(","),
+            List(24) { 1.0 / 24 }.joinToString(","),
+            List(10) { 0.0 }.joinToString(","),
+            List(10) { 0.0 }.joinToString(","),
+            "0", "1.0", "", "$START,81,2",
+        ).joinToString("|")
+        assertClose(39.75, BatteryModel.decode(version1(2.0)).hoursLeft(START, 80, UTC), 0.01)
+        assertNull(BatteryModel.decode(version1(315.5)).hoursLeft(START, 80, UTC))
+        // Learned 1.1.0 models are kept as they are.
+        val learned = Watch(BatteryModel.empty()) { _, _ -> 2.0 }
+        learned.runDays(2)
+        val text = learned.model.encode().split("|").take(9).toMutableList().apply { this[0] = "1" }
+        assertEquals(learned.predict()!!, BatteryModel.decode(text.joinToString("|")).hoursLeft(learned.t, learned.level, UTC)!!, 1e-9)
     }
 
     @Test

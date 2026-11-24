@@ -8,6 +8,7 @@ package io.github.ls6777.datadial.stats
 import java.time.Instant
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.min
 import kotlin.math.pow
@@ -30,8 +31,9 @@ import kotlin.math.pow
  * observation, which updates all three. Older observations count for less
  * and less (half as much every [HALF_LIFE_DAYS] days), so the model follows
  * changes in use and the battery's aging. Until it has learned anything it
- * predicts nothing; after its first hour or so it predicts from what it has,
- * and gets better from there.
+ * predicts from the rate an earlier version measured, if it has a plausible
+ * one, or nothing; after its first hour or so it predicts from what it has
+ * learned alone, and gets better from there.
  *
  * Pure Kotlin, no Android: [Battery] reads the battery and stores the
  * model's state ([encode], [decode]) between the app's short runs.
@@ -53,6 +55,12 @@ class BatteryModel private constructor(
     private var anchor: Anchor?,
     /** The last reading, or null since charging or before any. */
     private var last: Reading?,
+    /**
+     * The drain rate an earlier version measured, in percent per hour, used
+     * only until the model has learned from real use (0 if none). Kept
+     * apart from the sums, so a poor one can't skew what's learned.
+     */
+    private val startRate: Double,
 ) {
     /** A battery reading: [level] percent at [at], epoch milliseconds, in the watch's [boot]th run. */
     private data class Reading(val at: Long, val level: Int, val boot: Int)
@@ -128,10 +136,13 @@ class BatteryModel private constructor(
      * @param now Current time, epoch milliseconds
      * @param level Current battery level in percent
      * @param zone Time zone for the hour of the day
-     * @return Hours left (at most [MAX_HOURS]), or null before the model has learned anything
+     * @return Hours left (at most [MAX_HOURS]); before the model has learned
+     *   anything, at the earlier version's rate, or null without one
      */
     fun hoursLeft(now: Long, level: Int, zone: ZoneId): Double? {
-        if (!trained()) return null
+        if (!trained()) {
+            return startRate.takeIf { it > 0 }?.let { min((level - 0.5).coerceAtLeast(0.0) / it, MAX_HOURS) }
+        }
         var remaining = level.toDouble()
         var current = recent
         val open = anchor?.takeIf { it.level == level && it.at < now }
@@ -165,11 +176,12 @@ class BatteryModel private constructor(
     fun learnedHours(): Double = hourHours.sum()
 
     /**
-     * The drain rate the model expects right now, in percent per hour, or
-     * null before it has learned anything.
+     * The drain rate the model expects right now, in percent per hour;
+     * before it has learned anything, the earlier version's rate, or null
+     * without one.
      */
     fun rateNow(now: Long, level: Int, zone: ZoneId): Double? {
-        if (!trained()) return null
+        if (!trained()) return startRate.takeIf { it > 0 }
         return hourRate(Instant.ofEpochMilli(now).atZone(zone).hour) * levelFactor(band(level.toDouble())) * recent
     }
 
@@ -184,6 +196,7 @@ class BatteryModel private constructor(
         recent.toString(),
         anchor?.let { "${it.at},${it.level},${it.uncertainty}" }.orEmpty(),
         last?.let { "${it.at},${it.level},${it.boot}" }.orEmpty(),
+        startRate.toString(),
     ).joinToString("|")
 
     /** Learn from [percent] lost between [start] and [end] around [level], updating all three parts. */
@@ -281,7 +294,12 @@ class BatteryModel private constructor(
 
     companion object {
         /** Format version of [encode]'s text. */
-        private const val VERSION = "1"
+        private const val VERSION = "2"
+        /** 1.1.0's format: no [startRate]; the earlier version's rate went into the sums. */
+        private const val VERSION_1 = "1"
+        /** An earlier version's rate is used only if it's in this range, in percent per hour. */
+        private const val MIN_START_RATE = 0.1
+        private const val MAX_START_RATE = 30.0
         private const val HOURS = 24
         /** The battery's tenths: 0-9%, 10-19%, ... 90-100%. */
         private const val BANDS = 10
@@ -314,41 +332,67 @@ class BatteryModel private constructor(
         private const val MS_PER_HOUR = 3_600_000.0
 
         /** A model that hasn't learned anything. */
-        fun empty() = BatteryModel(
+        fun empty() = starting(0.0)
+
+        /**
+         * A model that hasn't learned anything, predicting at an earlier
+         * version's drain rate until it has. A rate no watch drains at
+         * (outside [MIN_START_RATE] to [MAX_START_RATE], say from a battery
+         * level set by hand on the emulator) is ignored.
+         * @param perHour Drain rate in percent per hour
+         */
+        fun starting(perHour: Double) = BatteryModel(
             DoubleArray(HOURS), DoubleArray(HOURS), DoubleArray(BANDS), DoubleArray(BANDS),
             0, 1.0, null, null,
+            perHour.takeIf { it in MIN_START_RATE..MAX_START_RATE } ?: 0.0,
         )
 
         /**
-         * A model that starts from a single drain rate (the one the earlier
-         * versions measured), worth an hour of use, so it predicts from the
-         * start and learns from there.
-         * @param perHour Drain rate in percent per hour
+         * The model from [encode]'s text, or an empty one if there's none or
+         * it can't be read. 1.1.0's text is read too: if it hadn't learned
+         * anything yet, the earlier version's rate it was given moves out of
+         * the sums to be the start rate (if plausible).
          */
-        fun seeded(perHour: Double) = empty().apply {
-            for (hour in 0 until HOURS) {
-                hourPercent[hour] = perHour / HOURS
-                hourHours[hour] = 1.0 / HOURS
+        fun decode(text: String?): BatteryModel {
+            val parts = text?.split("|") ?: return empty()
+            return try {
+                when {
+                    parts.size == 10 && parts[0] == VERSION -> parse(parts, parts[9].toDouble())
+                    parts.size == 9 && parts[0] == VERSION_1 -> fromVersion1(parse(parts, 0.0))
+                    else -> empty()
+                }
+            } catch (e: RuntimeException) {
+                empty()
             }
         }
 
-        /** The model from [encode]'s text, or an empty one if there's none or it can't be read. */
-        fun decode(text: String?): BatteryModel {
-            val parts = text?.split("|") ?: return empty()
-            if (parts.size != 9 || parts[0] != VERSION) return empty()
-            return try {
-                fun doubles(part: String, size: Int) =
-                    part.split(",").map(String::toDouble).toDoubleArray().also { require(it.size == size) }
-                fun longs(part: String) = part.takeIf(String::isNotEmpty)?.split(",")?.map(String::toLong)
-                BatteryModel(
-                    doubles(parts[1], HOURS), doubles(parts[2], HOURS),
-                    doubles(parts[3], BANDS), doubles(parts[4], BANDS),
-                    parts[5].toLong(), parts[6].toDouble(),
-                    longs(parts[7])?.let { Anchor(it[0], it[1].toInt(), it[2]) },
-                    longs(parts[8])?.let { Reading(it[0], it[1].toInt(), it[2].toInt()) },
-                )
-            } catch (e: RuntimeException) {
-                empty()
+        /** The model in [parts] of [encode]'s text, with [startRate]. */
+        private fun parse(parts: List<String>, startRate: Double): BatteryModel {
+            fun doubles(part: String, size: Int) =
+                part.split(",").map(String::toDouble).toDoubleArray().also { require(it.size == size) }
+            fun longs(part: String) = part.takeIf(String::isNotEmpty)?.split(",")?.map(String::toLong)
+            return BatteryModel(
+                doubles(parts[1], HOURS), doubles(parts[2], HOURS),
+                doubles(parts[3], BANDS), doubles(parts[4], BANDS),
+                parts[5].toLong(), parts[6].toDouble(),
+                longs(parts[7])?.let { Anchor(it[0], it[1].toInt(), it[2]) },
+                longs(parts[8])?.let { Reading(it[0], it[1].toInt(), it[2].toInt()) },
+                startRate,
+            )
+        }
+
+        /**
+         * A 1.1.0 model. One that has only the earlier version's rate in its
+         * sums (an hour spread evenly, nothing learned) starts over from
+         * that rate; one that has learned is kept as it is.
+         */
+        private fun fromVersion1(model: BatteryModel): BatteryModel {
+            val onlyStart = model.hourHours.all { abs(it - 1.0 / HOURS) < 1e-9 } &&
+                model.bandExpected.all { it == 0.0 }
+            if (!onlyStart) return model
+            return starting(model.hourPercent.sum()).also {
+                it.anchor = model.anchor
+                it.last = model.last
             }
         }
 
