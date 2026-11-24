@@ -1,6 +1,6 @@
 /**
  * @file Store.kt
- * The elevation calibration, the battery samples and drain rate, and the
+ * The elevation calibration, the battery drain model, and the
  * test switch, kept in shared preferences so they survive between the
  * short-lived services that use them.
  */
@@ -15,8 +15,11 @@ object Store {
     private const val SEA_LEVEL_PRESSURE = "seaLevelPressure"
     private const val CALIBRATED_AT = "calibratedAt"
     private const val TEST_VALUES = "testValues"
-    private const val BATTERY_SAMPLES = "batterySamples"
-    private const val BATTERY_RATE = "batteryRate"
+    private const val BATTERY_MODEL = "batteryModel"
+    /** The earlier versions' battery samples, removed with the first model stored. */
+    private const val OLD_BATTERY_SAMPLES = "batterySamples"
+    /** The earlier versions' drain rate, the model's starting point. */
+    private const val OLD_BATTERY_RATE = "batteryRate"
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -48,25 +51,24 @@ object Store {
         prefs(context).edit().putBoolean(TEST_VALUES, on).apply()
     }
 
-    /** The battery samples since the last unplug, oldest first (see [Battery.sample]). */
-    fun batterySamples(context: Context): List<Battery.Sample> =
-        prefs(context).getString(BATTERY_SAMPLES, "").orEmpty()
-            .split(";")
-            .mapNotNull { entry ->
-                val (at, level) = entry.split(":").takeIf { it.size == 2 } ?: return@mapNotNull null
-                Battery.Sample(at.toLongOrNull() ?: return@mapNotNull null, level.toIntOrNull() ?: return@mapNotNull null)
-            }
-
-    /** Store the battery samples, as "time:level" entries separated by ";". */
-    fun setBatterySamples(context: Context, samples: List<Battery.Sample>) {
-        prefs(context).edit().putString(BATTERY_SAMPLES, samples.joinToString(";") { "${it.at}:${it.level}" }).apply()
+    /**
+     * The battery drain model. Before there is one, it starts from the
+     * drain rate the earlier versions measured, if any, so the time left
+     * keeps showing after an update.
+     */
+    fun batteryModel(context: Context): BatteryModel {
+        val prefs = prefs(context)
+        prefs.getString(BATTERY_MODEL, null)?.let { return BatteryModel.decode(it) }
+        val rate = prefs.getFloat(OLD_BATTERY_RATE, 0f)
+        return if (rate > 0f) BatteryModel.seeded(rate.toDouble()) else BatteryModel.empty()
     }
 
-    /** The last measured drain rate in percent per hour, or null if none yet. */
-    fun batteryRate(context: Context): Float? = prefs(context).getFloat(BATTERY_RATE, 0f).takeIf { it > 0f }
-
-    /** Store the last measured drain rate. */
-    fun setBatteryRate(context: Context, perHour: Float) {
-        prefs(context).edit().putFloat(BATTERY_RATE, perHour).apply()
+    /** Store the battery drain model, dropping the earlier versions' samples and rate. */
+    fun setBatteryModel(context: Context, model: BatteryModel) {
+        prefs(context).edit()
+            .putString(BATTERY_MODEL, model.encode())
+            .remove(OLD_BATTERY_SAMPLES)
+            .remove(OLD_BATTERY_RATE)
+            .apply()
     }
 }

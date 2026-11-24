@@ -2,7 +2,8 @@
  * @file MainActivity.kt
  * The app's one screen: asks for the permissions the elevation needs,
  * registers with Health Services (which wakes the app to refresh it),
- * calibrates the elevation and shows what it reads.
+ * calibrates the elevation and shows what it reads, and what the battery
+ * drain model has learned.
  */
 package io.github.ls6777.datadial.stats
 
@@ -19,7 +20,9 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.text.DateFormat
+import java.time.ZoneId
 import java.util.Date
+import kotlin.math.roundToInt
 
 /** Permissions and status screen. */
 class MainActivity : Activity() {
@@ -108,6 +111,21 @@ class MainActivity : Activity() {
 
     private suspend fun show(health: String, calibration: String) {
         val elevation = Elevation.meters(this)?.let(Elevation::format) ?: Sources.NO_VALUE
-        status.text = getString(R.string.status, elevation, calibration, health)
+        status.text = getString(R.string.status, elevation, calibration, health, batteryStatus())
+    }
+
+    /** What the battery drain model has learned so far, and its estimate now. */
+    private fun batteryStatus(): String {
+        val now = System.currentTimeMillis()
+        val (level, charging) = Battery.read(this)
+        val model = Store.batteryModel(this)
+        val learned = model.learnedHours().roundToInt()
+        val rate = model.rateNow(now, level, ZoneId.systemDefault())
+        val hours = Battery.hoursLeft(this, now)
+        return when {
+            rate == null -> getString(R.string.battery_learning)
+            charging || hours == null -> getString(R.string.battery_charging, learned)
+            else -> getString(R.string.battery_model, Battery.format(hours), rate, learned)
+        }
     }
 }

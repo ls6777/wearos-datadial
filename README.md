@@ -70,11 +70,36 @@ standard sea-level pressure, which can be off by a few hundred feet.
 
 **Battery time left** is a second data source, for the
 [Night Dial](https://github.com/ls6777/NightDial) watch face's battery gauge: the hours of
-battery left at the rate it has been draining ("23h"). Each time DataDial Stats wakes (see
-below) it records the battery level; once the battery has dropped 2% since it was last
-unplugged, hours left = level ÷ drain rate, up to the last 12 hours of samples. Until then it
-uses the last rate it measured. While charging, or before it has measured any rate, it sends
-no data. DataDial itself doesn't use it.
+battery left ("23h"), from a model of how this watch's battery drains that keeps learning
+from its own use. Each time DataDial Stats wakes (see below) it reads the battery level, and
+each percent the battery loses, timed from one drop to the next, teaches the model three
+things:
+
+- **The hour of the day:** the usual drain in each of the day's 24 hours, so a night's slow
+  drain and a day's faster one are both expected at their times. An hour without data of its
+  own uses the overall average.
+- **The battery level:** how much faster or slower each tenth of the battery goes than the
+  rest. Batteries don't drain evenly: the fuel gauge's top and bottom percentages are often
+  quicker or slower. A tenth without data of its own (usually the bottom one, since the watch
+  gets charged first) goes like its neighbor toward the middle.
+- **What the watch is doing now:** how much faster or slower than usual the last hour or so
+  has gone (a workout, say). The forecast assumes this fades back to the usual over a couple
+  of hours.
+
+The time left is the battery's remaining percent used up hour by hour at the rate the model
+expects for each hour, level and the current use; it counts down between drops instead of
+waiting for the next one. Older use counts for less (half as much every two weeks), so the
+model follows changes in routine and the battery's aging. A drop counts only if the readings
+on either side of it are close together compared with the time since the last drop, so the
+long gaps when the watch doesn't wake the app don't skew it. Charging, or the watch turning
+off or restarting (after a software update, say), ends the percent being timed, so the time
+off isn't counted as use; what the model has learned is kept.
+
+The model starts predicting after about an hour unplugged (or straight away after updating
+from a version that had measured a rate, which it starts from) and gets better every day.
+While charging it sends no data. The app's screen shows the current estimate, the drain rate
+it expects now and how many hours of use it has learned from; `./build.sh statslog` shows each
+percent it learns from, with what the model expected. DataDial itself doesn't use it.
 
 **How often it updates.** DataDial Stats doesn't run all the time: Android starts it when it
 has something to do, and it reads a value and stops. The system is supposed to ask for the
@@ -153,7 +178,9 @@ contain code.
 | `watchface/src/main/res/values/strings.xml` | Names shown in the editor |
 | `watchface/src/main/res/drawable/preview.png` | Picker and store preview (an emulator capture of the test build) |
 | `stats/src/main/kotlin/.../Sources.kt` | DataDial Stats' elevation and battery time data sources |
-| `stats/src/main/kotlin/.../Battery.kt` | Battery sampling and the time-left estimate |
+| `stats/src/main/kotlin/.../Battery.kt` | Battery readings and the time-left estimate |
+| `stats/src/main/kotlin/.../BatteryModel.kt` | The battery drain model that learns from the watch's use |
+| `stats/src/test/` | Unit tests for the battery drain model, against a simulated watch |
 | `stats/src/main/kotlin/.../Health.kt` | Health Services wake-ups that refresh the elevation |
 | `stats/src/main/kotlin/.../Elevation.kt` | Barometric elevation and its calibration |
 | `stats/src/main/kotlin/.../Sensors.kt` | One-shot sensor readings |
@@ -173,6 +200,8 @@ Python 3 with Pillow.
 ./build.sh log      # the watch face runtime's log: XML and expression errors show up here
 ./build.sh statslog # DataDial Stats' log: when each stat is read, and its value
 ```
+
+DataDial Stats' unit tests run on the PC: `./gradlew :stats:testDebugUnitTest`.
 
 `./build.sh test` writes the normal XML back when it's done, so the test values never stay in
 the source, and switches on DataDial Stats' test values (a switch only the debug build has).

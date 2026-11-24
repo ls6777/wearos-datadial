@@ -30,4 +30,5 @@ dependencies {
     implementation(libs.wear.complications.data.source.ktx)
     implementation(libs.health.services.client)
     implementation(libs.concurrent.futures.ktx)
+    testImplementation(libs.junit)
 }

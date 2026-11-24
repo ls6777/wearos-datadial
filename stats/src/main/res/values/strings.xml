@@ -12,7 +12,10 @@
 
     <!-- App screen -->
     <string name="allow">Allow access</string>
-    <string name="status">Elevation: %1$s\n%2$s\nUpdates: %3$s</string>
+    <string name="status">Elevation: %1$s\n%2$s\nUpdates: %3$s\n%4$s</string>
+    <string name="battery_learning">Battery time: learning (needs about an hour unplugged)</string>
+    <string name="battery_charging">Battery time: learned from %1$d h of use (charging)</string>
+    <string name="battery_model">Battery time: %1$s left, %2$.1f%%/h now, learned from %3$d h of use</string>
     <string name="calibrating">Calibrating elevation…</string>
     <string name="calibrated_now">Elevation calibrated just now</string>
     <string name="calibrated_at">Elevation calibrated %1$s</string>
