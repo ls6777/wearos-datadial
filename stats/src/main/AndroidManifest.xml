@@ -30,8 +30,11 @@
         </activity>
 
         <!-- The elevation data source. DataDial uses it as the default of its
-             9 o'clock stat, and Night Dial as its elevation gauge's, so both
-             are listed as safe watch faces. -->
+             9 o'clock stat, and Night Dial and Night Digital as their
+             elevation gauges'. A face can only make a third-party source its
+             default if the source lists it as a safe watch face (and it then
+             gets the data without asking); any face can still pick it in the
+             watch face editor. -->
         <service
             android:name=".ElevationSource"
             android:label="@string/elevation"
@@ -49,12 +52,13 @@
                 android:value="300" />
             <meta-data
                 android:name="android.support.wearable.complications.SAFE_WATCH_FACES"
-                android:value="io.github.ls6777.datadial,io.github.ls6777.nightdial" />
+                android:value="io.github.ls6777.datadial,io.github.ls6777.nightdial,io.github.ls6777.nightdigital" />
         </service>
 
         <!-- The battery's time left, at the rate it has been draining. Night
-             Dial uses it as the default of its battery gauge, so it is listed
-             as a safe watch face. -->
+             Dial and Night Digital use it as the default of their battery
+             gauges. All three of the faces are listed as safe watch faces,
+             as for the elevation. -->
         <service
             android:name=".BatteryTimeSource"
             android:label="@string/battery_time"
@@ -72,7 +76,7 @@
                 android:value="300" />
             <meta-data
                 android:name="android.support.wearable.complications.SAFE_WATCH_FACES"
-                android:value="io.github.ls6777.nightdial" />
+                android:value="io.github.ls6777.datadial,io.github.ls6777.nightdial,io.github.ls6777.nightdigital" />
         </service>
 
         <!-- Woken by Health Services with new activity data. -->

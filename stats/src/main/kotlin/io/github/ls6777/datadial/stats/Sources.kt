@@ -1,7 +1,7 @@
 /**
  * @file Sources.kt
  * The complication data sources: elevation, drawn by DataDial like its own
- * stats, and the battery's time left, drawn by Night Dial.
+ * stats, and the battery's time left, drawn by Night Dial and Night Digital.
  */
 package io.github.ls6777.datadial.stats
 
@@ -92,8 +92,8 @@ class ElevationSource : SuspendingComplicationDataSourceService() {
 
 /**
  * The battery's time left at the rate it has been draining ("23h"), for
- * Night Dial's battery gauge. No data while charging or before a rate is
- * known.
+ * Night Dial's and Night Digital's battery gauges. No data while charging
+ * or before a rate is known.
  */
 class BatteryTimeSource : SuspendingComplicationDataSourceService() {
     override fun onComplicationActivated(complicationInstanceId: Int, type: ComplicationType) =
