@@ -25,8 +25,8 @@ android {
         applicationId = "io.github.ls6777.datadial"
         minSdk = 36
         targetSdk = 36
-        versionCode = 8
-        versionName = "2.0.0"
+        versionCode = 9
+        versionName = "2.0.1"
     }
 
     signingConfigs {
